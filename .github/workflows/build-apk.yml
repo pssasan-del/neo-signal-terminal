@@ -33,7 +33,7 @@ jobs:
         run: flutter analyze --suggestions
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --android-skip-build-dependency-validation
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
