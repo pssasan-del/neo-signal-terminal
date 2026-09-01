@@ -55,7 +55,56 @@ class _SignalsPageState extends State<SignalsPage>{List<dynamic> items=[];String
  void _open(Map<String,dynamic>x){showModalBottomSheet(context:context,isScrollControlled:true,showDragHandle:true,builder:(c)=>SignalSheet(signal:x));}
  @override Widget build(BuildContext context)=>PageFrame(title:'Signals',actions:[IconButton(onPressed:busy?null:_load,icon:const Icon(Icons.refresh))],child:Column(children:[if(error!=null)Notice(error!),if(items.isEmpty&&!busy)const EmptyState(icon:Icons.bolt_outlined,text:'No active signals yet'),...items.map((v){final x=_map(v);return Padding(padding:const EdgeInsets.only(bottom:10),child:SignalCard(x,onTap:()=>_open(x)));})]));}
 
-class SignalSheet extends StatelessWidget{const SignalSheet({super.key,required this.signal});final Map<String,dynamic>signal;@override Widget build(BuildContext context){final state='${signal['state']??'ACTIVE'}';return SafeArea(child:Padding(padding:const EdgeInsets.fromLTRB(20,4,20,24),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.stretch,children:[Row(children:[Expanded(child:Text('${signal['symbol_key']??signal['symbol']??'Signal'}',style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w900)))),Chip(label:Text(state))]),const SizedBox(height:14),MetricGrid(items:[('Entry',signal['entry']),('Stop',signal['stop']??signal['stop_loss']),('T1',signal['target1']),('T2',signal['target2']),('Side',signal['side']),('Last',signal['last_price'])]),const SizedBox(height:16),const Text('Execution remains protected by the risk gate, execution arm and one-time confirmation token.',style:TextStyle(color:Colors.black54))]));}}
+class SignalSheet extends StatelessWidget {
+  const SignalSheet({super.key, required this.signal});
+  final Map<String, dynamic> signal;
+
+  @override
+  Widget build(BuildContext context) {
+    final state = '${signal['state'] ?? 'ACTIVE'}';
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${signal['symbol_key'] ?? signal['symbol'] ?? 'Signal'}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                ),
+                Chip(label: Text(state)),
+              ],
+            ),
+            const SizedBox(height: 14),
+            MetricGrid(
+              items: [
+                ('Entry', signal['entry']),
+                ('Stop', signal['stop'] ?? signal['stop_loss']),
+                ('T1', signal['target1']),
+                ('T2', signal['target2']),
+                ('Side', signal['side']),
+                ('Last', signal['last_price']),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Execution remains protected by the risk gate, execution arm and one-time confirmation token.',
+              style: TextStyle(color: Colors.black54),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class TradePage extends StatefulWidget{const TradePage({super.key,required this.api});final ApiService api;@override State<TradePage>createState()=>_TradePageState();}
 class _TradePageState extends State<TradePage>{final underlying=TextEditingController(text:'NIFTY');final expiry=TextEditingController();final ltp=TextEditingController();final step=TextEditingController(text:'50');final qty=TextEditingController(text:'75');String type='CE';String product='MIS';Map<String,dynamic>? selected;List<dynamic> candidates=[];bool busy=false;String? message;
@@ -74,7 +123,119 @@ class _PortfolioPageState extends State<PortfolioPage>{List<dynamic> p=[];Map<St
  Future<void>_refreshBroker()async{try{await widget.api.postJson('/portfolio/positions/refresh',{});await _load();}catch(e){if(mounted)setState(()=>error='$e');}}
  @override Widget build(BuildContext context)=>PageFrame(title:'Portfolio',actions:[IconButton(onPressed:busy?null:_refreshBroker,icon:const Icon(Icons.sync))],child:Column(children:[PnlHeader(value:_num(sum['day_mtm'])),const SizedBox(height:14),if(error!=null)Notice(error!),if(p.isEmpty&&!busy)const EmptyState(icon:Icons.inbox_outlined,text:'No open positions'),...p.map((v)=>Padding(padding:const EdgeInsets.only(bottom:10),child:PositionTile(api:widget.api,x:_map(v),onDone:_load)))]));}
 
-class PositionTile extends StatelessWidget{const PositionTile({super.key,required this.api,required this.x,required this.onDone});final ApiService api;final Map<String,dynamic>x;final VoidCallback onDone;@override Widget build(BuildContext context){final q=_int(x['net_quantity']??x['quantity']);final pnl=_num(x['mtm']??x['pnl']);return Card(child:Padding(padding:const EdgeInsets.all(14),child:Column(children:[Row(children:[Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('${x['trading_symbol']??x['symbol']??'-'}',style:const TextStyle(fontWeight:FontWeight.w900)),const SizedBox(height:3),Text('Qty $q  •  Avg ${x['average_price']??'-'}  •  LTP ${x['ltp']??'-'}',style:const TextStyle(color:Colors.black54))])),Text(_money(pnl),style:TextStyle(fontWeight:FontWeight.w900,color:pnl>=0?Colors.green.shade700:Colors.red.shade700))]),const SizedBox(height:10),Row(mainAxisAlignment:MainAxisAlignment.end,children:[TextButton(onPressed:q==0?null:()=>showDialog(context:context,builder:(c)=>ExitPlanDialog(api:api,position:x)),child:const Text('SL / Targets')),const SizedBox(width:8),OutlinedButton(onPressed:q==0?null:()async{try{final r=await api.postJson('/portfolio/exit-intent',{'position_key':'${x['key']}'});if(!context.mounted)return;if(r['ok']!=true){ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Exit blocked: ${r['reasons']}')));return;}await showDialog(context:context,builder:(c)=>ConfirmTradeDialog(api:api,intent:r,livePrice:_num(x['ltp']??x['average_price'])));onDone();}catch(e){if(context.mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('$e')));}},child:const Text('Prepare Exit'))]))));}}
+class PositionTile extends StatelessWidget {
+  const PositionTile({
+    super.key,
+    required this.api,
+    required this.x,
+    required this.onDone,
+  });
+
+  final ApiService api;
+  final Map<String, dynamic> x;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final q = _int(x['net_quantity'] ?? x['quantity']);
+    final pnl = _num(x['mtm'] ?? x['pnl']);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${x['trading_symbol'] ?? x['symbol'] ?? '-'}',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Qty $q  •  Avg ${x['average_price'] ?? '-'}  •  LTP ${x['ltp'] ?? '-'}',
+                        style: const TextStyle(color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  _money(pnl),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: pnl >= 0
+                        ? Colors.green.shade700
+                        : Colors.red.shade700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: q == 0
+                      ? null
+                      : () => showDialog(
+                            context: context,
+                            builder: (c) =>
+                                ExitPlanDialog(api: api, position: x),
+                          ),
+                  child: const Text('SL / Targets'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton(
+                  onPressed: q == 0
+                      ? null
+                      : () async {
+                          try {
+                            final r = await api.postJson(
+                              '/portfolio/exit-intent',
+                              {'position_key': '${x['key']}'},
+                            );
+                            if (!context.mounted) return;
+                            if (r['ok'] != true) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text('Exit blocked: ${r['reasons']}'),
+                                ),
+                              );
+                              return;
+                            }
+                            await showDialog(
+                              context: context,
+                              builder: (c) => ConfirmTradeDialog(
+                                api: api,
+                                intent: r,
+                                livePrice:
+                                    _num(x['ltp'] ?? x['average_price']),
+                              ),
+                            );
+                            onDone();
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('$e')),
+                              );
+                            }
+                          }
+                        },
+                  child: const Text('Prepare Exit'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
 class MorePage extends StatefulWidget{const MorePage({super.key,required this.api,required this.initialUrl,required this.onUrl,required this.ws});final ApiService api;final String initialUrl;final ValueChanged<String> onUrl;final bool ws;@override State<MorePage>createState()=>_MorePageState();}
 class _MorePageState extends State<MorePage>{late final TextEditingController c=TextEditingController(text:widget.initialUrl);Map<String,dynamic> risk={};Map<String,dynamic> execution={};dynamic orders,holdings,limits,journal;String? msg;bool busy=false;@override void initState(){super.initState();_load();}@override void dispose(){c.dispose();super.dispose();}
