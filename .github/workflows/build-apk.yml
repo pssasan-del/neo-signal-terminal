@@ -33,7 +33,7 @@ jobs:
         run: flutter analyze --suggestions
 
       - name: Build APK
-        run: flutter build apk --release --android-skip-build-dependency-validation
+        run: flutter build apk --release --android-skip-build-dependency-validation --dart-define=APP_API_TOKEN=${{ secrets.APP_API_TOKEN }}
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
