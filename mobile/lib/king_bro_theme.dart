@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// KING BRO TRADE — locked neon glass design system.
-/// Branding: Powered by Raaja Bro.
+/// NEO SIGNAL TERMINAL — neon glass robotic design system.
 class KbColors {
   static const bgTop = Color(0xFF031820);
   static const bgMid = Color(0xFF06303A);
