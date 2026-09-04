@@ -19,27 +19,27 @@ class _NeoSignalAppState extends State<NeoSignalApp> {
   Future<void> _load() async {final p=await SharedPreferences.getInstance();if(!mounted)return;setState((){baseUrl=p.getString('api')??baseUrl;ready=true;});}
   Future<void> _save(String v) async {final p=await SharedPreferences.getInstance();await p.setString('api',v);if(mounted)setState(()=>baseUrl=v);}
   @override Widget build(BuildContext context){
-    final scheme=ColorScheme.fromSeed(seedColor:const Color(0xff0077e6),brightness:Brightness.light,surface:const Color(0xfff4f8fc));
+    final scheme=ColorScheme.fromSeed(seedColor:const Color(0xff00bfe8),brightness:Brightness.dark,surface:const Color(0xff07131f));
     return MaterialApp(
       debugShowCheckedModeBanner:false,
       title:'NEO Signal',
       theme:ThemeData(
         colorScheme:scheme,
         useMaterial3:true,
-        scaffoldBackgroundColor:const Color(0xfff4f8fc),
+        scaffoldBackgroundColor:const Color(0xff04101a),
         fontFamily:'Roboto',
         cardTheme:const CardThemeData(elevation:0,margin:EdgeInsets.zero,color:Colors.transparent),
         navigationBarTheme:NavigationBarThemeData(
           height:70,
           elevation:0,
-          backgroundColor:const Color(0xfffbfdff),
-          indicatorColor:const Color(0xffdff7ff),
-          iconTheme:WidgetStateProperty.resolveWith((states)=>IconThemeData(color:states.contains(WidgetState.selected)?const Color(0xff0077e6):const Color(0xff607286))),
-          labelTextStyle:WidgetStateProperty.resolveWith((states)=>TextStyle(fontWeight:states.contains(WidgetState.selected)?FontWeight.w800:FontWeight.w600,color:states.contains(WidgetState.selected)?const Color(0xff005bb5):const Color(0xff526477))),
+          backgroundColor:const Color(0xff071722),
+          indicatorColor:const Color(0xff10394a),
+          iconTheme:WidgetStateProperty.resolveWith((states)=>IconThemeData(color:states.contains(WidgetState.selected)?const Color(0xff35dcff):const Color(0xff7594a8))),
+          labelTextStyle:WidgetStateProperty.resolveWith((states)=>TextStyle(fontWeight:states.contains(WidgetState.selected)?FontWeight.w900:FontWeight.w600,color:states.contains(WidgetState.selected)?const Color(0xff35dcff):const Color(0xff7895a8))),
         ),
         inputDecorationTheme:InputDecorationTheme(
           filled:true,
-          fillColor:const Color(0xfffbfdff),
+          fillColor:const Color(0xff0a1c29),
           border:OutlineInputBorder(borderRadius:BorderRadius.circular(16),borderSide:const BorderSide(color:Color(0xffcbd9e8))),
           enabledBorder:OutlineInputBorder(borderRadius:BorderRadius.circular(16),borderSide:const BorderSide(color:Color(0xffcbd9e8))),
           focusedBorder:OutlineInputBorder(borderRadius:BorderRadius.circular(16),borderSide:const BorderSide(color:Color(0xff00a9d9),width:1.5)),
@@ -61,7 +61,7 @@ class _TerminalShellState extends State<TerminalShell>{
   @override void didUpdateWidget(covariant TerminalShell old){super.didUpdateWidget(old);if(old.baseUrl!=widget.baseUrl){api=ApiService(widget.baseUrl);_connect();setState((){});}}
   void _connect(){tickSub?.cancel();tickSub=api.reconnectingTicks().listen((m){if(!mounted)return;if(m['_connection']=='connected'){setState(()=>ws=true);}else if(m['_connection']=='disconnected'){setState(()=>ws=false);}else{setState(()=>lastTick=m);}});}
   @override void dispose(){tickSub?.cancel();super.dispose();}
-  @override Widget build(BuildContext context){final pages=[HomePage(api:api,ws:ws,lastTick:lastTick),SignalsPage(api:api),TradePage(api:api),PortfolioPage(api:api),MorePage(api:api,initialUrl:widget.baseUrl,onUrl:widget.onBaseUrl,ws:ws)];return Scaffold(body:SafeArea(child:IndexedStack(index:index,children:pages)),bottomNavigationBar:NavigationBar(selectedIndex:index,onDestinationSelected:(v)=>setState(()=>index=v),destinations:const [NavigationDestination(icon:Icon(Icons.home_outlined),selectedIcon:Icon(Icons.home),label:'Home'),NavigationDestination(icon:Icon(Icons.bolt_outlined),selectedIcon:Icon(Icons.bolt),label:'Signals'),NavigationDestination(icon:Icon(Icons.swap_horiz),label:'Trade'),NavigationDestination(icon:Icon(Icons.pie_chart_outline),selectedIcon:Icon(Icons.pie_chart),label:'Portfolio'),NavigationDestination(icon:Icon(Icons.grid_view_outlined),selectedIcon:Icon(Icons.grid_view),label:'More')]));}
+  @override Widget build(BuildContext context){final pages=[HomePage(api:api,ws:ws,lastTick:lastTick),SignalsPage(api:api),ScannerPage(api:api),TradePage(api:api),PortfolioPage(api:api),MorePage(api:api,initialUrl:widget.baseUrl,onUrl:widget.onBaseUrl,ws:ws)];return Scaffold(body:SafeArea(child:IndexedStack(index:index,children:pages)),bottomNavigationBar:NavigationBar(selectedIndex:index,onDestinationSelected:(v)=>setState(()=>index=v),destinations:const [NavigationDestination(icon:Icon(Icons.home_outlined),selectedIcon:Icon(Icons.home),label:'Home'),NavigationDestination(icon:Icon(Icons.bolt_outlined),selectedIcon:Icon(Icons.bolt),label:'Signals'),NavigationDestination(icon:Icon(Icons.radar),selectedIcon:Icon(Icons.radar),label:'Scanner'),NavigationDestination(icon:Icon(Icons.swap_horiz),label:'Trade'),NavigationDestination(icon:Icon(Icons.pie_chart_outline),selectedIcon:Icon(Icons.pie_chart),label:'Portfolio'),NavigationDestination(icon:Icon(Icons.grid_view_outlined),selectedIcon:Icon(Icons.grid_view),label:'More')]));}
 }
 
 class PageFrame extends StatelessWidget{
@@ -71,19 +71,19 @@ class PageFrame extends StatelessWidget{
     onRefresh:()async{},
     child:DecoratedBox(
       decoration:const BoxDecoration(
-        gradient:LinearGradient(begin:Alignment.topCenter,end:Alignment.bottomCenter,colors:[Color(0xfff9fcff),Color(0xffeef5fb)]),
+        gradient:LinearGradient(begin:Alignment.topCenter,end:Alignment.bottomCenter,colors:[Color(0xff06131e),Color(0xff020b12)]),
       ),
       child:CustomScrollView(
         physics:const AlwaysScrollableScrollPhysics(),
         slivers:[
           SliverAppBar(
-            backgroundColor:const Color(0xfff9fcff),
+            backgroundColor:const Color(0xff06131e),
             surfaceTintColor:Colors.transparent,
             floating:true,
             title:Row(children:[
               Container(width:8,height:8,decoration:const BoxDecoration(shape:BoxShape.circle,color:Color(0xff00b8e6),boxShadow:[BoxShadow(color:Color(0x6600b8e6),blurRadius:10)])),
               const SizedBox(width:10),
-              Text(title,style:const TextStyle(fontWeight:FontWeight.w900,letterSpacing:.2,color:Color(0xff10263d))),
+              Text(title,style:const TextStyle(fontWeight:FontWeight.w900,letterSpacing:.2,color:Color(0xffdff9ff))),
             ]),
             actions:actions,
           ),
@@ -105,6 +105,58 @@ class _SignalsPageState extends State<SignalsPage>{List<dynamic> items=[];String
  Future<void>_load()async{setState(()=>busy=true);try{final v=await widget.api.getAny('/signals/lifecycle');if(mounted)setState((){items=v is List?v:[];error=null;});}catch(e){if(mounted)setState(()=>error='$e');}finally{if(mounted)setState(()=>busy=false);}}
  void _open(Map<String,dynamic>x){showModalBottomSheet(context:context,isScrollControlled:true,showDragHandle:true,builder:(c)=>SignalSheet(signal:x));}
  @override Widget build(BuildContext context)=>PageFrame(title:'Signals',actions:[IconButton(onPressed:busy?null:_load,icon:const Icon(Icons.refresh))],child:Column(children:[if(error!=null)Notice(error!),if(items.isEmpty&&!busy)const EmptyState(icon:Icons.bolt_outlined,text:'Signal engine scanning • no qualified setup yet'),...items.map((v){final x=_map(v);return Padding(padding:const EdgeInsets.only(bottom:10),child:SignalCard(x,onTap:()=>_open(x)));})]));}
+
+
+class ScannerPage extends StatefulWidget{
+  const ScannerPage({super.key,required this.api});
+  final ApiService api;
+  @override State<ScannerPage> createState()=>_ScannerPageState();
+}
+class _ScannerPageState extends State<ScannerPage>{
+  String mode='IDLE';
+  String note='90-stock universe • run only the group you select';
+  Future<void> _start(String group) async {
+    setState((){mode='GROUP $group';note='45 stocks selected • scanner control ready';});
+  }
+  void _stop(){setState((){mode='IDLE';note='Scanner stopped';});}
+  @override Widget build(BuildContext context)=>PageFrame(
+    title:'AI Scanner',
+    child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+      RobotPanel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Row(children:[
+          Container(width:48,height:48,decoration:BoxDecoration(shape:BoxShape.circle,border:Border.all(color:const Color(0xff25d8ff)),boxShadow:const [BoxShadow(color:Color(0x5500d8ff),blurRadius:18)]),child:const Icon(Icons.radar,color:Color(0xff35dcff))),
+          const SizedBox(width:12),
+          Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+            const Text('KOTAK NEO SIGNAL RADAR',style:TextStyle(fontSize:11,letterSpacing:1.3,fontWeight:FontWeight.w900,color:Color(0xff35dcff))),
+            const SizedBox(height:4),
+            Text(mode,style:const TextStyle(fontSize:22,fontWeight:FontWeight.w900,color:Color(0xffe6fbff))),
+          ])),
+        ]),
+        const SizedBox(height:14),
+        Text(note,style:const TextStyle(color:Color(0xff91adbd),fontWeight:FontWeight.w700)),
+        const SizedBox(height:14),
+        const Wrap(spacing:7,runSpacing:7,children:[
+          RobotChip(icon:Icons.timer_outlined,label:'5M STRICT',active:true),
+          RobotChip(icon:Icons.show_chart,label:'EMA 9/21',active:true),
+          RobotChip(icon:Icons.bolt,label:'BREAKOUT',active:true),
+          RobotChip(icon:Icons.speed,label:'RSI',active:true),
+          RobotChip(icon:Icons.insights,label:'WILLIAMS %R',active:true),
+          RobotChip(icon:Icons.security,label:'R:R ≥ 1.85',active:true),
+        ]),
+      ])),
+      const SizedBox(height:16),
+      Row(children:[
+        Expanded(child:FilledButton.icon(onPressed:()=>_start('A'),icon:const Icon(Icons.play_arrow),label:const Text('START A • 45'))),
+        const SizedBox(width:10),
+        Expanded(child:FilledButton.icon(onPressed:()=>_start('B'),icon:const Icon(Icons.play_arrow),label:const Text('START B • 45'))),
+      ]),
+      const SizedBox(height:10),
+      OutlinedButton.icon(onPressed:_stop,icon:const Icon(Icons.stop_circle_outlined),label:const Text('STOP SCAN')),
+      const SizedBox(height:18),
+      const Notice('Scanner buttons are UI-safe in this build. Live 45/45 backend start/stop routes must be connected before they can control server scanning.'),
+    ]),
+  );
+}
 
 class SignalSheet extends StatelessWidget{const SignalSheet({super.key,required this.signal});final Map<String,dynamic>signal;@override Widget build(BuildContext context){final state='${signal['state']??'ACTIVE'}';return SafeArea(child:Padding(padding:const EdgeInsets.fromLTRB(20,4,20,24),child:Column(mainAxisSize:MainAxisSize.min,crossAxisAlignment:CrossAxisAlignment.stretch,children:[Row(children:[Expanded(child:Text('${signal['symbol_key']??signal['symbol']??'Signal'}',style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w900))),Chip(label:Text(state))]),const SizedBox(height:14),MetricGrid(items:[('Entry',signal['entry']),('Stop',signal['stop']??signal['stop_loss']),('T1',signal['target1']),('T2',signal['target2']),('Side',signal['side']),('Last',signal['last_price'])]),const SizedBox(height:16),const Text('Execution remains protected by the risk gate, execution arm and one-time confirmation token.',style:TextStyle(color:Colors.black54))])));}}
 
@@ -214,15 +266,15 @@ class RobotPanel extends StatelessWidget{
   final Widget child; final EdgeInsets padding; final bool glow;
   @override Widget build(BuildContext context)=>Container(
     decoration:BoxDecoration(
-      gradient:const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xffffffff),Color(0xfff2f9ff)]),
+      gradient:const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xff0c2230),Color(0xff071620)]),
       borderRadius:BorderRadius.circular(18),
-      border:Border.all(color:const Color(0xffb9d8ee),width:1),
-      boxShadow:glow?const [BoxShadow(color:Color(0x2600a9d9),blurRadius:16,spreadRadius:1),BoxShadow(color:Color(0x120078e6),blurRadius:30,offset:Offset(0,8))]:const [],
+      border:Border.all(color:const Color(0xff1d8eaa),width:1),
+      boxShadow:glow?const [BoxShadow(color:Color(0x4400cfff),blurRadius:16,spreadRadius:1),BoxShadow(color:Color(0x220078e6),blurRadius:30,offset:Offset(0,8))]:const [],
     ),
     child:ClipRRect(
       borderRadius:BorderRadius.circular(18),
       child:Stack(children:[
-        Positioned(right:-36,top:-48,child:Container(width:120,height:120,decoration:const BoxDecoration(shape:BoxShape.circle,gradient:RadialGradient(colors:[Color(0x3300d8ff),Color(0x0000d8ff)])))),
+        Positioned(right:-36,top:-48,child:Container(width:120,height:120,decoration:const BoxDecoration(shape:BoxShape.circle,gradient:RadialGradient(colors:[Color(0x4400e5ff),Color(0x0000d8ff)])))),
         Padding(padding:padding,child:child),
       ]),
     ),
@@ -269,7 +321,7 @@ class InfoTile extends StatelessWidget{const InfoTile({super.key,required this.i
 
 class Notice extends StatelessWidget{const Notice(this.t,{super.key});final String t;@override Widget build(BuildContext context)=>Padding(padding:const EdgeInsets.symmetric(vertical:8),child:Container(decoration:BoxDecoration(color:const Color(0xfffff9ea),borderRadius:BorderRadius.circular(14),border:Border.all(color:const Color(0xffffd98c))),padding:const EdgeInsets.all(12),child:Text(t,style:const TextStyle(color:Color(0xff745000)))));}
 
-class EmptyState extends StatelessWidget{const EmptyState({super.key,required this.icon,required this.text});final IconData icon;final String text;@override Widget build(BuildContext context)=>RobotPanel(glow:false,child:Padding(padding:const EdgeInsets.symmetric(vertical:24),child:Column(children:[Container(width:58,height:58,decoration:BoxDecoration(shape:BoxShape.circle,gradient:const LinearGradient(colors:[Color(0xffe9f9ff),Color(0xfff8fdff)]),border:Border.all(color:const Color(0xffa9ddeb)),boxShadow:const [BoxShadow(color:Color(0x2600a9d9),blurRadius:18)]),child:Icon(icon,size:28,color:const Color(0xff008eb8))),const SizedBox(height:12),Text(text,textAlign:TextAlign.center,style:const TextStyle(color:Color(0xff5c7183),fontWeight:FontWeight.w700))])));}
+class EmptyState extends StatelessWidget{const EmptyState({super.key,required this.icon,required this.text});final IconData icon;final String text;@override Widget build(BuildContext context)=>RobotPanel(glow:false,child:Padding(padding:const EdgeInsets.symmetric(vertical:24),child:Column(children:[Container(width:58,height:58,decoration:BoxDecoration(shape:BoxShape.circle,gradient:const LinearGradient(colors:[Color(0xffe9f9ff),Color(0xfff8fdff)]),border:Border.all(color:const Color(0xffa9ddeb)),boxShadow:const [BoxShadow(color:Color(0x4400cfff),blurRadius:18)]),child:Icon(icon,size:28,color:const Color(0xff008eb8))),const SizedBox(height:12),Text(text,textAlign:TextAlign.center,style:const TextStyle(color:Color(0xff5c7183),fontWeight:FontWeight.w700))])));}
 
 class SignalCard extends StatelessWidget{const SignalCard(this.x,{super.key,required this.onTap});final Map<String,dynamic>x;final VoidCallback onTap;@override Widget build(BuildContext context){final side='${x['side']??''}'.toUpperCase();final buy=side=='BUY';return GestureDetector(onTap:onTap,child:RobotPanel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Row(children:[Container(width:38,height:38,decoration:BoxDecoration(shape:BoxShape.circle,color:buy?const Color(0xffe9fff2):const Color(0xffffeef0),border:Border.all(color:buy?const Color(0xff9bdfba):const Color(0xffffb5bd))),child:Icon(buy?Icons.trending_up:Icons.trending_down,color:buy?const Color(0xff159447):const Color(0xffcf3744))),const SizedBox(width:10),Expanded(child:Text('${x['symbol_key']??x['symbol']??'Signal'}',style:const TextStyle(fontWeight:FontWeight.w900,fontSize:16,color:Color(0xff17364f)))),Container(padding:const EdgeInsets.symmetric(horizontal:9,vertical:5),decoration:BoxDecoration(color:buy?const Color(0xffeafff1):const Color(0xffffeef0),borderRadius:BorderRadius.circular(12)),child:Text(side,style:TextStyle(fontWeight:FontWeight.w900,color:buy?const Color(0xff117b40):const Color(0xffb42e38))))]),const SizedBox(height:12),Text('ENTRY  ${x['entry']??'-'}    SL  ${x['stop']??x['stop_loss']??'-'}    T1  ${x['target1']??'-'}',style:const TextStyle(fontSize:12,fontWeight:FontWeight.w800,color:Color(0xff536d81))),const SizedBox(height:8),Row(children:[const Icon(Icons.bolt,size:15,color:Color(0xff00a9d9)),const SizedBox(width:4),Text('${x['state']??'ACTIVE'}',style:const TextStyle(fontSize:11,fontWeight:FontWeight.w900,color:Color(0xff087ca7))),const Spacer(),const Icon(Icons.chevron_right,color:Color(0xff7992a7))])])));}}
 
