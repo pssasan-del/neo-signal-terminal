@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 
-/// NEO SIGNAL TERMINAL — neon glass robotic design system.
+/// KING BRO TRADE — locked neon glass design system.
+/// Branding: Powered by Raaja Bro.
 class KbColors {
   static const bgTop = Color(0xFF031820);
-  static const bgMid = Color(0xFF06303A);
+  static const bgMid = Color(0xFF082A46);
   static const bgBottom = Color(0xFF04161D);
-  static const card = Color(0xD9113440);
-  static const cardSoft = Color(0xB8174650);
-  static const cardStrong = Color(0xF20A2B35);
-  static const border = Color(0x6638EAD9);
-  static const borderStrong = Color(0xAA38EAD9);
-  static const cyan = Color(0xFF2CF3E8);
+  static const card = Color(0xE0102A3A);
+  static const cardSoft = Color(0xC0143044);
+  static const cardStrong = Color(0xF2081D2B);
+  static const border = Color(0x6638D9FF);
+  static const borderStrong = Color(0xAA38D9FF);
+  static const cyan = Color(0xFF2CEBFF);
   static const emerald = Color(0xFF35F08A);
-  static const blueGreen = Color(0xFF20D9C7);
+  static const blueGreen = Color(0xFF18BFFF);
   static const coral = Color(0xFFFF6675);
   static const amber = Color(0xFFFFC857);
   static const text = Color(0xFFF3FFFE);

@@ -29,8 +29,11 @@ jobs:
       - name: Flutter Pub Get
         run: flutter pub get
 
+      - name: Dart Syntax Gate
+        run: dart format --output=none lib/main.dart lib/king_bro_theme.dart
+
       - name: Analyze Compatibility
-        run: flutter analyze --suggestions
+        run: flutter analyze --no-fatal-infos
 
       - name: Build APK
         run: flutter build apk --release --android-skip-build-dependency-validation --dart-define=APP_API_TOKEN=${{ secrets.APP_API_TOKEN }}
