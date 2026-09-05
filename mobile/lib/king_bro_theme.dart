@@ -3,17 +3,17 @@ import 'package:flutter/material.dart';
 /// KING BRO TRADE — locked neon glass design system.
 /// Branding: Powered by Raaja Bro.
 class KbColors {
-  static const bgTop = Color(0xFF031820);
-  static const bgMid = Color(0xFF082A46);
-  static const bgBottom = Color(0xFF04161D);
-  static const card = Color(0xE0102A3A);
-  static const cardSoft = Color(0xC0143044);
-  static const cardStrong = Color(0xF2081D2B);
-  static const border = Color(0x6638D9FF);
-  static const borderStrong = Color(0xAA38D9FF);
-  static const cyan = Color(0xFF2CEBFF);
+  static const bgTop = Color(0xFF020817);
+  static const bgMid = Color(0xFF061B38);
+  static const bgBottom = Color(0xFF010611);
+  static const card = Color(0xE0081830);
+  static const cardSoft = Color(0xD00A203C);
+  static const cardStrong = Color(0xFA061327);
+  static const border = Color(0x6637CFFF);
+  static const borderStrong = Color(0xCC37CFFF);
+  static const cyan = Color(0xFF39E8FF);
   static const emerald = Color(0xFF35F08A);
-  static const blueGreen = Color(0xFF18BFFF);
+  static const blueGreen = Color(0xFF258CFF);
   static const coral = Color(0xFFFF6675);
   static const amber = Color(0xFFFFC857);
   static const text = Color(0xFFF3FFFE);
@@ -34,11 +34,11 @@ class KbColors {
 class KingBroTheme {
   static ThemeData get theme {
     final scheme = ColorScheme.fromSeed(
-      seedColor: KbColors.emerald,
+      seedColor: KbColors.cyan,
       brightness: Brightness.dark,
       surface: KbColors.card,
     ).copyWith(
-      primary: KbColors.emerald,
+      primary: KbColors.cyan,
       secondary: KbColors.cyan,
       surface: KbColors.card,
       error: KbColors.coral,
@@ -101,11 +101,11 @@ class KingBroTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: KbColors.cardStrong,
-        indicatorColor: KbColors.emerald.withValues(alpha: 0.18),
+        indicatorColor: KbColors.cyan.withValues(alpha: 0.16),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
-            color: selected ? KbColors.emerald : KbColors.textMuted,
+            color: selected ? KbColors.cyan : KbColors.textMuted,
             fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
             fontSize: 12,
           );
@@ -124,7 +124,7 @@ class KingBroTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: KbColors.emerald,
+          backgroundColor: KbColors.cyan,
           foregroundColor: KbColors.bgTop,
           minimumSize: const Size(48, 48),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),

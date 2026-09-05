@@ -92,7 +92,55 @@ class RobotGridPainter extends CustomPainter{
 class HomePage extends StatefulWidget{const HomePage({super.key,required this.api,required this.ws,required this.lastTick});final ApiService api;final bool ws;final Map<String,dynamic> lastTick;@override State<HomePage>createState()=>_HomePageState();}
 class _HomePageState extends State<HomePage>{Map<String,dynamic> boot={};String? error;Timer? timer;@override void initState(){super.initState();_load();timer=Timer.periodic(const Duration(seconds:5),(_)=>_load(silent:true));}@override void dispose(){timer?.cancel();super.dispose();}
  Future<void>_load({bool silent=false})async{try{final r=await widget.api.getJson('/app/bootstrap');if(mounted)setState((){boot=r;error=null;});}catch(e){if(mounted&&!silent)setState(()=>error='$e');}}
- @override Widget build(BuildContext context){final health=_map(boot['health']);final sum=_map(boot['position_summary']);final ex=_map(boot['execution']);final risk=_map(boot['risk']);final scanner=_map(boot['scanner']);final stats=_map(boot['signal_stats']);final signals=(boot['signals'] as List?)??[];final mtm=_num(sum['day_mtm']);final open=_int(sum['open_positions']);final indices=(boot['indices'] as List?)??[];final latest=signals.isNotEmpty?_map(signals.first):<String,dynamic>{};return PageFrame(title:'NEO Signal',actions:[Padding(padding:const EdgeInsets.only(right:12),child:StatusPill(ok:widget.ws&&health['market_feed_stale']!=true,label:widget.ws?'LIVE':'RECONNECT'))],child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[if(error!=null)Notice(error!),RobotPanel(child:Row(children:[const Icon(Icons.smart_toy_outlined,color:KbColors.cyan,size:34),const SizedBox(width:12),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Text('KING BRO AI CORE',style:TextStyle(fontSize:11,letterSpacing:1.2,fontWeight:FontWeight.w900,color:KbColors.cyan)),const SizedBox(height:4),Text(scanner['active']==true?'SCANNER GROUP ${scanner['group']} ACTIVE':'SCANNER STANDBY',style:const TextStyle(fontSize:18,fontWeight:FontWeight.w900,color:KbColors.text)),const SizedBox(height:4),Text(scanner['active']==true?'${scanner['ready_count']??0}/${scanner['resolved_count']??0} symbols strategy-ready • ${stats['live']??0} live signals':'Start a 45-stock group from Scanner',style:const TextStyle(color:KbColors.textMuted,fontSize:12))]))])),const SizedBox(height:14),if(indices.isNotEmpty)IndexStrip(items:indices)else const EmptyState(icon:Icons.sensors,text:'Connecting market indices'),const SizedBox(height:14),BalanceCard(mtm:mtm,open:open,armed:ex['armed']==true,trading:risk['trading_enabled']==true),if(latest.isNotEmpty)...[const SizedBox(height:16),const SectionTitle('LATEST QUALIFIED SIGNAL'),const SizedBox(height:8),SignalCard(latest,onTap:(){})],const SizedBox(height:18),const SectionTitle('SYSTEM LINK'),const SizedBox(height:8),InfoTile(icon:Icons.cloud_done_outlined,title:'Kotak Neo session',value:health['authenticated']==true?'CONNECTED':'LOGIN REQUIRED',good:health['authenticated']==true),const SizedBox(height:8),InfoTile(icon:Icons.stream,title:'Market stream',value:health['market_stream_running']==true?'RUNNING':'OFFLINE',good:health['market_stream_running']==true),const SizedBox(height:8),InfoTile(icon:Icons.receipt_long_outlined,title:'Order stream',value:health['order_stream_running']==true?'RUNNING':'OFFLINE',good:health['order_stream_running']==true)]));}
+ @override Widget build(BuildContext context){
+   final health=_map(boot['health']);
+   final sum=_map(boot['position_summary']);
+   final ex=_map(boot['execution']);
+   final risk=_map(boot['risk']);
+   final scanner=_map(boot['scanner']);
+   final stats=_map(boot['signal_stats']);
+   final signals=(boot['signals'] as List?)??[];
+   final mtm=_num(sum['day_mtm']);
+   final open=_int(sum['open_positions']);
+   final indices=(boot['indices'] as List?)??[];
+   final latest=signals.isNotEmpty?_map(signals.first):<String,dynamic>{};
+   final scanActive=scanner['active']==true;
+   return PageFrame(
+     title:'KING BRO TRADE',
+     actions:[Padding(padding:const EdgeInsets.only(right:12),child:StatusPill(ok:widget.ws&&health['market_feed_stale']!=true,label:widget.ws?'LIVE':'RECONNECT'))],
+     child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+       if(error!=null)Notice(error!),
+       if(indices.isNotEmpty)IndexStrip(items:indices)else const EmptyState(icon:Icons.sensors,text:'Connecting NIFTY • BANKNIFTY • SENSEX'),
+       const SizedBox(height:10),
+       RobotPanel(glow:false,padding:const EdgeInsets.symmetric(horizontal:12,vertical:12),child:Row(children:[
+         Expanded(child:_HomeMetric(label:'DAY P&L',value:_money(mtm,sign:true),accent:mtm>=0?KbColors.emerald:KbColors.coral)),
+         const _HudDivider(),
+         Expanded(child:_HomeMetric(label:'POSITIONS',value:'$open',accent:KbColors.cyan)),
+         const _HudDivider(),
+         Expanded(child:_HomeMetric(label:'SCANNER',value:scanActive?'${scanner['group']??'-'} • ${scanner['ready_count']??0}/45':'OFF',accent:scanActive?KbColors.cyan:KbColors.textMuted)),
+       ])),
+       const SizedBox(height:10),
+       Row(children:[
+         Expanded(child:_CompactState(icon:Icons.cloud_done_outlined,label:'KOTAK',value:health['authenticated']==true?'CONNECTED':'LOGIN',ok:health['authenticated']==true)),
+         const SizedBox(width:7),
+         Expanded(child:_CompactState(icon:Icons.stream,label:'FEED',value:health['market_stream_running']==true?'RUNNING':'OFFLINE',ok:health['market_stream_running']==true)),
+         const SizedBox(width:7),
+         Expanded(child:_CompactState(icon:ex['armed']==true?Icons.lock_open:Icons.lock_outline,label:'EXEC',value:ex['armed']==true?'ARMED':'SAFE',ok:ex['armed']==true)),
+       ]),
+       if(latest.isNotEmpty)...[
+         const SizedBox(height:14),
+         Row(children:[const Expanded(child:SectionTitle('LATEST SIGNAL')),Text('${stats['live']??0} LIVE',style:const TextStyle(fontSize:10,fontWeight:FontWeight.w900,color:KbColors.cyan))]),
+         const SizedBox(height:7),SignalCard(latest,onTap:(){}),
+       ]else...[
+         const SizedBox(height:14),
+         RobotPanel(glow:false,padding:const EdgeInsets.all(13),child:Row(children:[const Icon(Icons.radar,color:KbColors.cyan),const SizedBox(width:10),Expanded(child:Text(scanActive?'Group ${scanner['group']} scanning • ${scanner['ready_count']??0}/45 strategy-ready':'Scanner standby • choose A or B from Scanner',style:const TextStyle(fontSize:12,fontWeight:FontWeight.w700,color:KbColors.textSecondary)))])),
+       ],
+       const SizedBox(height:12),
+       Text(risk['trading_enabled']==true?'RISK GATE ON • protected live execution':'RISK GATE OFF • analysis mode',textAlign:TextAlign.center,style:TextStyle(fontSize:9,letterSpacing:.8,fontWeight:FontWeight.w800,color:risk['trading_enabled']==true?KbColors.amber:KbColors.textMuted)),
+     ]),
+   );
+ }
+
 }
 
 class SignalsPage extends StatefulWidget{const SignalsPage({super.key,required this.api});final ApiService api;@override State<SignalsPage>createState()=>_SignalsPageState();}
@@ -237,9 +285,9 @@ class _TradePageState extends State<TradePage>{
       RobotPanel(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
         const Text('KING BRO EXECUTION DESK',style:TextStyle(fontSize:11,letterSpacing:1.3,fontWeight:FontWeight.w900,color:KbColors.cyan)),
         const SizedBox(height:5),
-        const Text('Manual • Options • Orders',style:TextStyle(fontSize:21,fontWeight:FontWeight.w900,color:KbColors.text)),
+        const Text('ORDER TERMINAL',style:TextStyle(fontSize:18,fontWeight:FontWeight.w900,letterSpacing:.8,color:KbColors.text)),
         const SizedBox(height:10),
-        const Text('All live orders pass through risk gate + execution arm + one-time confirmation.',style:TextStyle(color:KbColors.textMuted)),
+        const Text('Manual • Options • Orders  //  protected execution',style:TextStyle(fontSize:11,color:KbColors.textMuted)),
       ])),
       const SizedBox(height:14),
       SegmentedButton<int>(
@@ -349,7 +397,7 @@ class _ManualTradePanelState extends State<ManualTradePanel>{
         ],onChanged:(v)=>setState(()=>segment=v??segment),decoration:const InputDecoration(labelText:'Segment'))),
       ]),
       const SizedBox(height:10),
-      FilledButton.icon(onPressed:busy?null:_search,icon:const Icon(Icons.search),label:Text(busy?'WORKING…':'SEARCH KOTAK')),
+      FilledButton.icon(onPressed:busy?null:_search,icon:const Icon(Icons.search),label:Text(busy?'SEARCHING…':'FIND INSTRUMENT')),
     ])),
     if(message!=null)Padding(padding:const EdgeInsets.only(top:10),child:Notice(message!)),
     if(results.isNotEmpty)...[
@@ -627,46 +675,41 @@ class _ExitPlanDialogState extends State<ExitPlanDialog>{final sl=TextEditingCon
 class IndexStrip extends StatelessWidget{
   const IndexStrip({super.key,required this.items});
   final List<dynamic>items;
+  Map<String,dynamic>? _pick(String key){
+    for(final v in items){final x=_map(v);final label='${x['label']??''}'.toUpperCase().replaceAll(' ','');if(label.contains(key))return x;}
+    return null;
+  }
+  Widget _tile(String label,Map<String,dynamic>? x){
+    final tick=_map(x?['tick']);
+    final p=_num(tick['last_traded_price']??tick['ltp']??tick['price']);
+    final change=_num(tick['net_change_percent']??tick['change_percent']??tick['percent_change']);
+    final live=p>0; final up=change>=0;
+    return Expanded(child:Container(
+      height:92,padding:const EdgeInsets.fromLTRB(10,10,10,9),
+      decoration:BoxDecoration(
+        gradient:const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xF20A2443),Color(0xF2041025)]),
+        borderRadius:BorderRadius.circular(14),border:Border.all(color:live?KbColors.borderStrong:KbColors.border),
+        boxShadow:live?const [BoxShadow(color:Color(0x2200DFFF),blurRadius:12)]:const [],
+      ),
+      child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Row(children:[Expanded(child:Text(label,maxLines:1,style:const TextStyle(fontSize:9,fontWeight:FontWeight.w900,letterSpacing:.5,color:KbColors.textSecondary))),Container(width:5,height:5,decoration:BoxDecoration(shape:BoxShape.circle,color:live?KbColors.cyan:KbColors.textFaint))]),
+        const Spacer(),
+        Text(live?p.toStringAsFixed(2):'--',maxLines:1,style:const TextStyle(fontSize:16,fontWeight:FontWeight.w900,color:KbColors.text)),
+        const SizedBox(height:3),
+        Text(live&&change!=0?'${up?'+':''}${change.toStringAsFixed(2)}%':'LIVE',style:TextStyle(fontSize:8,fontWeight:FontWeight.w900,color:live?(up?KbColors.emerald:KbColors.coral):KbColors.textMuted)),
+      ]),
+    ));
+  }
   @override Widget build(BuildContext context)=>Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-    const SectionTitle('MARKET GRID'),
-    const SizedBox(height:8),
-    SingleChildScrollView(scrollDirection:Axis.horizontal,child:Row(children:items.map((v){
-      final x=_map(v),tick=_map(x['tick']);
-      final p=_num(tick['last_traded_price']??tick['ltp']??tick['price']);
-      final change=_num(tick['net_change_percent']??tick['change_percent']??tick['percent_change']);
-      final live=p>0;
-      final up=change>=0;
-      final accent=live?(up?KbColors.emerald:KbColors.coral):KbColors.textFaint;
-      return Container(
-        width:160,margin:const EdgeInsets.only(right:10),padding:const EdgeInsets.all(14),
-        decoration:BoxDecoration(
-          gradient:const LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xF21A3340),Color(0xF2081A26)]),
-          borderRadius:BorderRadius.circular(18),
-          border:Border.all(color:live?KbColors.borderStrong:KbColors.border,width:1),
-          boxShadow:live?const [BoxShadow(color:Color(0x3300DFFF),blurRadius:18,spreadRadius:1)]:const [],
-        ),
-        child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
-          Row(children:[
-            Expanded(child:Text('${x['label']??'INDEX'}',maxLines:1,overflow:TextOverflow.ellipsis,style:const TextStyle(fontSize:10,fontWeight:FontWeight.w900,letterSpacing:.8,color:KbColors.textSecondary))),
-            Container(width:7,height:7,decoration:BoxDecoration(shape:BoxShape.circle,color:live?KbColors.cyan:KbColors.textFaint,boxShadow:live?const [BoxShadow(color:Color(0xAA00E5FF),blurRadius:8)]:const [])),
-          ]),
-          const SizedBox(height:8),
-          Text(live?p.toStringAsFixed(2):'--',style:const TextStyle(fontSize:20,fontWeight:FontWeight.w900,color:KbColors.text)),
-          const SizedBox(height:7),
-          Row(children:[
-            Icon(live?(up?Icons.arrow_upward:Icons.arrow_downward):Icons.remove,size:13,color:accent),
-            const SizedBox(width:3),
-            Text(live&&change!=0?'${change>=0?'+':''}${change.toStringAsFixed(2)}%':'LIVE FEED',style:TextStyle(fontSize:9,fontWeight:FontWeight.w900,color:accent)),
-            const Spacer(),
-            const Text('NEO',style:TextStyle(fontSize:8,letterSpacing:1.1,fontWeight:FontWeight.w900,color:KbColors.textFaint)),
-          ]),
-          const SizedBox(height:8),
-          Container(height:2,decoration:const BoxDecoration(gradient:LinearGradient(colors:[Color(0x0000DFFF),Color(0xFF00DFFF),Color(0x0000DFFF)]))),
-        ]),
-      );
-    }).toList())),
+    Row(children:[const Expanded(child:Text('MARKET PULSE',style:TextStyle(fontSize:10,letterSpacing:1.4,fontWeight:FontWeight.w900,color:KbColors.cyan))),Container(width:6,height:6,decoration:const BoxDecoration(shape:BoxShape.circle,color:KbColors.emerald,boxShadow:[BoxShadow(color:Color(0x8835F08A),blurRadius:8)])),const SizedBox(width:5),const Text('NEO LIVE',style:TextStyle(fontSize:8,fontWeight:FontWeight.w900,color:KbColors.textMuted))]),
+    const SizedBox(height:7),
+    Row(children:[_tile('NIFTY',_pick('NIFTY50')??_pick('NIFTY')),const SizedBox(width:6),_tile('BANKNIFTY',_pick('NIFTYBANK')??_pick('BANK')),const SizedBox(width:6),_tile('SENSEX',_pick('SENSEX'))]),
   ]);
 }
+
+class _HudDivider extends StatelessWidget{const _HudDivider();@override Widget build(BuildContext context)=>Container(width:1,height:38,color:KbColors.border);}
+class _HomeMetric extends StatelessWidget{const _HomeMetric({required this.label,required this.value,required this.accent});final String label,value;final Color accent;@override Widget build(BuildContext context)=>Column(children:[Text(label,style:const TextStyle(fontSize:8,letterSpacing:.8,fontWeight:FontWeight.w900,color:KbColors.textMuted)),const SizedBox(height:5),FittedBox(fit:BoxFit.scaleDown,child:Text(value,style:TextStyle(fontSize:15,fontWeight:FontWeight.w900,color:accent)))]);}
+class _CompactState extends StatelessWidget{const _CompactState({required this.icon,required this.label,required this.value,required this.ok});final IconData icon;final String label,value;final bool ok;@override Widget build(BuildContext context)=>Container(height:56,padding:const EdgeInsets.symmetric(horizontal:8),decoration:BoxDecoration(color:KbColors.cardSoft,borderRadius:BorderRadius.circular(12),border:Border.all(color:KbColors.border)),child:Row(children:[Icon(icon,size:17,color:ok?KbColors.cyan:KbColors.textMuted),const SizedBox(width:6),Expanded(child:Column(mainAxisAlignment:MainAxisAlignment.center,crossAxisAlignment:CrossAxisAlignment.start,children:[Text(label,style:const TextStyle(fontSize:7,fontWeight:FontWeight.w900,color:KbColors.textMuted)),const SizedBox(height:2),FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,child:Text(value,style:TextStyle(fontSize:9,fontWeight:FontWeight.w900,color:ok?KbColors.text:KbColors.textMuted)))]))]));}
 
 Iterable<Map<String,dynamic>> _collectInstrumentRows(dynamic payload) sync* {
   if(payload is Map){
