@@ -117,7 +117,7 @@ class _HomePageState extends State<HomePage>{Map<String,dynamic> boot={};String?
          const _HudDivider(),
          Expanded(child:_HomeMetric(label:'POSITIONS',value:'$open',accent:KbColors.cyan)),
          const _HudDivider(),
-         Expanded(child:_HomeMetric(label:'SCANNER',value:scanActive?'${scanner['group']??'-'} • ${scanner['ready_count']??0}/45':'OFF',accent:scanActive?KbColors.cyan:KbColors.textMuted)),
+         Expanded(child:_HomeMetric(label:'SCANNER',value:scanActive?'${scanner['group']??'-'} • ${scanner['ready_count']??0}/${max(1,_int(scanner['resolved_count']))}':'OFF',accent:scanActive?KbColors.cyan:KbColors.textMuted)),
        ])),
        const SizedBox(height:10),
        Row(children:[
@@ -133,7 +133,7 @@ class _HomePageState extends State<HomePage>{Map<String,dynamic> boot={};String?
          const SizedBox(height:7),SignalCard(latest,onTap:(){}),
        ]else...[
          const SizedBox(height:14),
-         RobotPanel(glow:false,padding:const EdgeInsets.all(13),child:Row(children:[const Icon(Icons.radar,color:KbColors.cyan),const SizedBox(width:10),Expanded(child:Text(scanActive?'Group ${scanner['group']} scanning • ${scanner['ready_count']??0}/45 strategy-ready':'Scanner standby • choose A or B from Scanner',style:const TextStyle(fontSize:12,fontWeight:FontWeight.w700,color:KbColors.textSecondary)))])),
+         RobotPanel(glow:false,padding:const EdgeInsets.all(13),child:Row(children:[const Icon(Icons.radar,color:KbColors.cyan),const SizedBox(width:10),Expanded(child:Text(scanActive?'Group ${scanner['group']} • ${scanner['resolved_count']??0} live • ${scanner['ready_count']??0} ready • ${scanner['warming_count']??0} warming':'Scanner standby • choose A or B from Scanner',style:const TextStyle(fontSize:12,fontWeight:FontWeight.w700,color:KbColors.textSecondary)))])),
        ],
        const SizedBox(height:12),
        Text(risk['trading_enabled']==true?'RISK GATE ON • protected live execution':'RISK GATE OFF • analysis mode',textAlign:TextAlign.center,style:TextStyle(fontSize:9,letterSpacing:.8,fontWeight:FontWeight.w800,color:risk['trading_enabled']==true?KbColors.amber:KbColors.textMuted)),
@@ -162,11 +162,11 @@ class _ScannerPageState extends State<ScannerPage>{
   int resolved=0, failed=0, ready=0, warming=0;
   @override void initState(){super.initState();_status();}
   Future<void> _status() async {
-    try{final r=await widget.api.getJson('/scanner/status');if(!mounted)return;setState((){final active=r['active']==true;mode=active?'GROUP ${r['group']}':'IDLE';resolved=_int(r['resolved_count']);failed=_int(r['failed_count']);ready=_int(r['ready_count']);warming=_int(r['warming_count']);note=active?'$resolved / 45 live • $ready strategy-ready • $warming warming':'90-stock universe • run only the group you select';});}catch(_){ }
+    try{final r=await widget.api.getJson('/scanner/status');if(!mounted)return;setState((){final active=r['active']==true;mode=active?'GROUP ${r['group']}':'IDLE';resolved=_int(r['resolved_count']);failed=_int(r['failed_count']);ready=_int(r['ready_count']);warming=_int(r['warming_count']);note=active?'$resolved live • $ready strategy-ready • $warming warming':'90-stock universe • run only the group you select';});}catch(_){ }
   }
   Future<void> _start(String group) async {
     setState((){busy=true;note='Resolving and subscribing Group $group…';});
-    try{final r=await widget.api.postJson('/scanner/start',{'group':group});if(!mounted)return;setState((){mode='GROUP ${r['group']??group}';resolved=_int(r['resolved_count']);failed=_int(r['failed_count']);ready=_int(r['ready_count']);warming=_int(r['warming_count']);note='$resolved / 45 live • $ready strategy-ready • $warming warming';});}catch(e){if(mounted)setState(()=>note='Scanner start failed: $e');}finally{if(mounted)setState(()=>busy=false);}
+    try{final r=await widget.api.postJson('/scanner/start',{'group':group});if(!mounted)return;setState((){mode='GROUP ${r['group']??group}';resolved=_int(r['resolved_count']);failed=_int(r['failed_count']);ready=_int(r['ready_count']);warming=_int(r['warming_count']);note='$resolved live • $ready strategy-ready • $warming warming';});}catch(e){if(mounted)setState(()=>note='Scanner start failed: $e');}finally{if(mounted)setState(()=>busy=false);}
   }
   Future<void> _stop() async {
     setState((){busy=true;note='Stopping scanner…';});
@@ -189,7 +189,7 @@ class _ScannerPageState extends State<ScannerPage>{
         ]),
         const SizedBox(height:14),
         Text(note,style:const TextStyle(color:Color(0xff91adbd),fontWeight:FontWeight.w700)),
-        if(mode!='IDLE')...[const SizedBox(height:12),Row(children:[Expanded(child:_MiniMetric(label:'RESOLVED',value:'$resolved',icon:Icons.link)),Expanded(child:_MiniMetric(label:'READY',value:'$ready',icon:Icons.verified_outlined)),Expanded(child:_MiniMetric(label:'WARMING',value:'$warming',icon:Icons.hourglass_bottom)),Expanded(child:_MiniMetric(label:'FAILED',value:'$failed',icon:Icons.error_outline))])],
+        if(mode!='IDLE')...[const SizedBox(height:12),Row(children:[Expanded(child:_MiniMetric(label:'RESOLVED',value:'$resolved',icon:Icons.link)),Expanded(child:_MiniMetric(label:'READY',value:'$ready',icon:Icons.verified_outlined)),Expanded(child:_MiniMetric(label:'WARMING',value:'$warming',icon:Icons.hourglass_bottom)),Expanded(child:_MiniMetric(label:'SKIPPED',value:'$failed',icon:Icons.remove_circle_outline))])],
         const SizedBox(height:14),
         const Wrap(spacing:7,runSpacing:7,children:[
           RobotChip(icon:Icons.timer_outlined,label:'5M STRICT',active:true),
@@ -322,7 +322,7 @@ class _ManualTradePanelState extends State<ManualTradePanel>{
   List<Map<String,dynamic>> results=[];
   Map<String,dynamic>? selected;
   double livePrice=0;
-  bool busy=false;
+  bool busy=false,quoteBusy=false;
   String? message;
 
   @override void dispose(){for(final c in [symbol,qty,limitPrice,trigger,reference]){c.dispose();}super.dispose();}
@@ -332,7 +332,8 @@ class _ManualTradePanelState extends State<ManualTradePanel>{
     setState((){busy=true;message='Searching Kotak instruments…';results=[];selected=null;livePrice=0;});
     try{
       final raw=await widget.api.postAny('/instruments/search',{'exchange_segment':segment,'symbol':symbol.text.trim().toUpperCase()});
-      final rows=_collectInstrumentRows(raw).take(12).toList();
+      final preferred=(raw is Map && raw['normalized'] is List) ? (raw['normalized'] as List).map(_map).toList() : _collectInstrumentRows(raw).toList();
+      final rows=_dedupeInstrumentRows(preferred).take(12).toList();
       if(!mounted)return;
       setState((){results=rows;message=rows.isEmpty?'No matching instrument returned by Kotak.':'${rows.length} matches • select the exact contract';});
     }catch(e){if(mounted)setState(()=>message='Search failed: $e');}
@@ -342,14 +343,15 @@ class _ManualTradePanelState extends State<ManualTradePanel>{
   Future<void>_select(Map<String,dynamic>x)async{
     final token='${x['instrument_token']??x['instrumentToken']??x['token']??x['pSymbol']??x['p_symbol']??''}';
     final seg='${x['exchange_segment']??x['exchangeSegment']??segment}';
-    setState((){selected=x;segment=seg;message='Loading live Kotak quote…';livePrice=0;});
-    if(token.isEmpty){setState(()=>message='Instrument selected, but token is missing.');return;}
+    setState((){selected=x;segment=seg;message=null;livePrice=0;quoteBusy=true;});
+    if(token.isEmpty){setState((){message='Kotak did not return a tradable token for this row.';quoteBusy=false;});return;}
     try{
       final q=await widget.api.getAny('/market/quote',query:{'exchange_segment':seg,'instrument_token':token,'quote_type':'all'});
       final p=_extractMarketPrice(q);
       if(!mounted)return;
-      setState((){livePrice=p;if(p>0)reference.text=p.toStringAsFixed(2);message=p>0?'Live quote ready.':'Quote returned without usable LTP; enter reference LTP manually.';});
-    }catch(e){if(mounted)setState(()=>message='Instrument selected. Live quote unavailable: $e');}
+      setState((){livePrice=p;if(p>0)reference.text=p.toStringAsFixed(2);message=p>0?null:'Live quote has no usable LTP; enter reference LTP manually.';});
+    }catch(e){if(mounted)setState(()=>message='Live quote unavailable. You can still enter the reference LTP manually.');}
+    finally{if(mounted)setState(()=>quoteBusy=false);}
   }
 
   Future<void>_prepare()async{
@@ -408,7 +410,7 @@ class _ManualTradePanelState extends State<ManualTradePanel>{
     if(selected!=null)...[
       const SizedBox(height:14),
       RobotPanel(child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
-        Row(children:[Expanded(child:Text(_instrumentLabel(selected!),style:const TextStyle(fontSize:18,fontWeight:FontWeight.w900,color:KbColors.text))),if(livePrice>0)Text('\u20B9${livePrice.toStringAsFixed(2)}',style:const TextStyle(fontSize:20,fontWeight:FontWeight.w900,color:KbColors.emerald))]),
+        Row(children:[Expanded(child:Text(_instrumentLabel(selected!),style:const TextStyle(fontSize:18,fontWeight:FontWeight.w900,color:KbColors.text))),if(quoteBusy)const SizedBox(width:18,height:18,child:CircularProgressIndicator(strokeWidth:2))else if(livePrice>0)Text('\u20B9${livePrice.toStringAsFixed(2)}',style:const TextStyle(fontSize:20,fontWeight:FontWeight.w900,color:KbColors.emerald))]),
         const SizedBox(height:12),
         SegmentedButton<String>(segments:const [ButtonSegment(value:'BUY',label:Text('BUY')),ButtonSegment(value:'SELL',label:Text('SELL'))],selected:{side},onSelectionChanged:(v)=>setState(()=>side=v.first)),
         const SizedBox(height:10),
@@ -431,11 +433,22 @@ class _ManualTradePanelState extends State<ManualTradePanel>{
 class InstrumentCandidateTile extends StatelessWidget{
   const InstrumentCandidateTile({super.key,required this.x,required this.selected,required this.onTap});
   final Map<String,dynamic>x;final bool selected;final VoidCallback onTap;
-  @override Widget build(BuildContext context)=>RobotPanel(onTap:onTap,highlight:selected,child:Row(children:[
-    Icon(selected?Icons.radio_button_checked:Icons.radio_button_off,color:selected?KbColors.emerald:KbColors.textMuted),const SizedBox(width:10),
-    Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(_instrumentLabel(x),style:const TextStyle(fontWeight:FontWeight.w900,color:KbColors.text)),const SizedBox(height:3),Text('${x['exchange_segment']??x['exchangeSegment']??'-'} • token ${x['instrument_token']??x['instrumentToken']??x['token']??'-'}',style:const TextStyle(fontSize:11,color:KbColors.textMuted))])),
-  ]));
+  @override Widget build(BuildContext context){
+    final seg='${x['exchange_segment']??x['exchangeSegment']??x['segment']??'NSE'}'.toUpperCase();
+    final token='${x['instrument_token']??x['instrumentToken']??x['token']??x['pSymbol']??x['p_symbol']??''}';
+    final kind='${x['instrument_type']??x['instrumentType']??x['type']??'EQUITY'}'.toUpperCase();
+    return RobotPanel(onTap:onTap,highlight:selected,child:Row(children:[
+      Icon(selected?Icons.radio_button_checked:Icons.radio_button_off,color:selected?KbColors.cyan:KbColors.textMuted),const SizedBox(width:10),
+      Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[
+        Text(_instrumentLabel(x),style:const TextStyle(fontWeight:FontWeight.w900,color:KbColors.text)),const SizedBox(height:4),
+        Wrap(spacing:6,runSpacing:4,children:[_MetaTag(seg),_MetaTag(kind),if(token.isNotEmpty)_MetaTag('ID ${token.length>8?token.substring(token.length-8):token}')]),
+      ])),
+      const Icon(Icons.chevron_right,color:KbColors.textMuted),
+    ]));
+  }
 }
+
+class _MetaTag extends StatelessWidget{const _MetaTag(this.text);final String text;@override Widget build(BuildContext context)=>Container(padding:const EdgeInsets.symmetric(horizontal:7,vertical:3),decoration:BoxDecoration(color:KbColors.cardSoft,borderRadius:BorderRadius.circular(7),border:Border.all(color:KbColors.border)),child:Text(text,style:const TextStyle(fontSize:8,fontWeight:FontWeight.w800,color:KbColors.textMuted)));}
 
 class OptionTradePanel extends StatefulWidget{const OptionTradePanel({super.key,required this.api});final ApiService api;@override State<OptionTradePanel>createState()=>_OptionTradePanelState();}
 class _OptionTradePanelState extends State<OptionTradePanel>{
@@ -572,11 +585,19 @@ class _MorePageState extends State<MorePage>{late final TextEditingController c=
  Future<void>_toggleArm(bool on)async{try{final r=await widget.api.postJson('/execution/arm',{'enabled':on});setState(()=>execution=r);}catch(e){setState(()=>msg='$e');}}
  Future<void>_login()async{await showDialog(context:context,builder:(c)=>LoginDialog(api:widget.api));await _load();}
  Future<void>_logout()async{try{await widget.api.postJson('/auth/logout',{});await _load();}catch(e){setState(()=>msg='$e');}}
- Future<void>_syncCore()async{try{final r=await widget.api.postJson('/instruments/sync-core',{});setState(()=>msg='Core indices synced: ${r['indices']}');}catch(e){setState(()=>msg='$e');}}
- Future<void>_recover()async{try{final r=await widget.api.postJson('/system/recover',{});setState(()=>msg='Recovery complete: ${r['subscriptions']}');await _load();}catch(e){setState(()=>msg='$e');}}
+ Future<void>_syncCore()async{try{final r=await widget.api.postJson('/instruments/sync-core',{});setState(()=>msg='Core indices synced: ${r['ok']==true?'OK':'CHECK'}');}catch(e){setState(()=>msg='$e');}}
+ Future<void>_recover()async{try{final r=await widget.api.postJson('/system/recover',{});setState(()=>msg=r['ok']==true?'Recovery complete':'Recovery completed with warnings');await _load();}catch(e){setState(()=>msg='$e');}}
  Future<void>_account()async{setState(()=>busy=true);try{final values=await Future.wait([widget.api.getAny('/orders'),widget.api.getAny('/portfolio/holdings'),widget.api.getAny('/portfolio/limits'),widget.api.getAny('/journal?limit=30')]);if(mounted)setState((){orders=values[0];holdings=values[1];limits=values[2];journal=values[3];msg=null;});}catch(e){if(mounted)setState(()=>msg='$e');}finally{if(mounted)setState(()=>busy=false);}}
- @override Widget build(BuildContext context)=>PageFrame(title:'More',child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[const SectionTitle('Kotak session'),const SizedBox(height:8),Row(children:[Expanded(child:FilledButton.icon(onPressed:_login,icon:const Icon(Icons.login),label:const Text('Login TOTP'))),const SizedBox(width:8),Expanded(child:OutlinedButton.icon(onPressed:_logout,icon:const Icon(Icons.logout),label:const Text('Logout')))]),const SizedBox(height:8),OutlinedButton.icon(onPressed:_syncCore,icon:const Icon(Icons.sync_alt),label:const Text('Sync NIFTY • BANKNIFTY • SENSEX')),const SizedBox(height:8),OutlinedButton.icon(onPressed:_recover,icon:const Icon(Icons.restore),label:const Text('Recover subscriptions & positions')),const SizedBox(height:20),const SectionTitle('Safety controls'),const SizedBox(height:8),SwitchListTile(tileColor:KbColors.card,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),title:const Text('Risk trading gate'),subtitle:const Text('Must be ON before execution can arm'),value:risk['trading_enabled']==true,onChanged:_toggleRisk),const SizedBox(height:8),SwitchListTile(tileColor:KbColors.card,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),title:const Text('Execution arm'),subtitle:const Text('Second gate for live order submission'),value:execution['armed']==true,onChanged:_toggleArm),const SizedBox(height:8),FilledButton.tonalIcon(onPressed:()async{try{await widget.api.postJson('/execution/kill-switch',{});await _load();if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Kill switch activated')));}catch(e){setState(()=>msg='$e');}},icon:const Icon(Icons.emergency),label:const Text('KILL SWITCH')),const SizedBox(height:20),const SectionTitle('Account'),const SizedBox(height:8),OutlinedButton.icon(onPressed:busy?null:_account,icon:const Icon(Icons.sync),label:Text(busy?'Loading…':'Load Orders • Holdings • Funds')),if(orders!=null)JsonPanel(title:'Orders',data:orders),if(holdings!=null)JsonPanel(title:'Holdings',data:holdings),if(limits!=null)JsonPanel(title:'Funds / Limits',data:limits),if(journal!=null)JsonPanel(title:'Trade Journal',data:journal),const SizedBox(height:20),const SectionTitle('Connection'),const SizedBox(height:8),TextField(controller:c,decoration:InputDecoration(labelText:'Backend URL',suffixIcon:Icon(widget.ws?Icons.cloud_done:Icons.cloud_off))),const SizedBox(height:10),FilledButton(onPressed:()async{final v=c.text.trim().replaceAll(RegExp(r'/$'),'');widget.onUrl(v);setState(()=>msg='Connection saved');},child:const Text('Save connection')),if(msg!=null)Padding(padding:const EdgeInsets.only(top:10),child:Notice(msg!))]));}
-
+ Future<void>_killSwitch()async{final ok=await showDialog<bool>(context:context,builder:(ctx)=>AlertDialog(title:const Text('Activate Kill Switch?'),content:const Text('This immediately blocks/halts live execution. Use only when you intend to stop trading.'),actions:[TextButton(onPressed:()=>Navigator.pop(ctx,false),child:const Text('Cancel')),FilledButton(style:FilledButton.styleFrom(backgroundColor:KbColors.coral),onPressed:()=>Navigator.pop(ctx,true),child:const Text('ACTIVATE'))]));if(ok!=true)return;try{await widget.api.postJson('/execution/kill-switch',{});await _load();if(mounted)ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Kill switch activated')));}catch(e){if(mounted)setState(()=>msg='$e');}}
+ @override Widget build(BuildContext context){final orderCount=_collectOrderRows(orders).length;final holdingCount=_recordCount(holdings);final fundRows=_fundMetrics(limits);final journalCount=_recordCount(journal);return PageFrame(title:'More',child:Column(crossAxisAlignment:CrossAxisAlignment.stretch,children:[
+   const SectionTitle('KOTAK SESSION'),const SizedBox(height:8),Row(children:[Expanded(child:FilledButton.icon(onPressed:_login,icon:const Icon(Icons.login),label:const Text('Login TOTP'))),const SizedBox(width:8),Expanded(child:OutlinedButton.icon(onPressed:_logout,icon:const Icon(Icons.logout),label:const Text('Logout')))]),const SizedBox(height:8),OutlinedButton.icon(onPressed:_syncCore,icon:const Icon(Icons.sync_alt),label:const Text('Sync market indices')),const SizedBox(height:8),OutlinedButton.icon(onPressed:_recover,icon:const Icon(Icons.restore),label:const Text('Recover session data')),
+   const SizedBox(height:18),const SectionTitle('SAFETY'),const SizedBox(height:8),SwitchListTile(tileColor:KbColors.card,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),title:const Text('Risk trading gate'),subtitle:const Text('Required before execution can arm'),value:risk['trading_enabled']==true,onChanged:_toggleRisk),const SizedBox(height:8),SwitchListTile(tileColor:KbColors.card,shape:RoundedRectangleBorder(borderRadius:BorderRadius.circular(14)),title:const Text('Execution arm'),subtitle:const Text('Second live-order safety gate'),value:execution['armed']==true,onChanged:_toggleArm),const SizedBox(height:8),FilledButton.icon(style:FilledButton.styleFrom(backgroundColor:KbColors.coral,foregroundColor:Colors.white),onPressed:_killSwitch,icon:const Icon(Icons.emergency),label:const Text('EMERGENCY KILL SWITCH')),
+   const SizedBox(height:18),const SectionTitle('ACCOUNT SNAPSHOT'),const SizedBox(height:8),OutlinedButton.icon(onPressed:busy?null:_account,icon:const Icon(Icons.sync),label:Text(busy?'Loading account…':'Refresh account data')),
+   if(orders!=null||holdings!=null||limits!=null)...[const SizedBox(height:10),RobotPanel(glow:false,child:Column(children:[Row(children:[Expanded(child:_MiniMetric(label:'ORDERS',value:'$orderCount',icon:Icons.receipt_long)),Expanded(child:_MiniMetric(label:'HOLDINGS',value:'$holdingCount',icon:Icons.account_balance_wallet_outlined)),Expanded(child:_MiniMetric(label:'JOURNAL',value:'$journalCount',icon:Icons.history))]),if(fundRows.isNotEmpty)...[const Divider(height:22),...fundRows.take(6).map((e)=>Padding(padding:const EdgeInsets.symmetric(vertical:4),child:Row(children:[Expanded(child:Text(e.$1,style:const TextStyle(fontSize:11,color:KbColors.textMuted))),Text(e.$2,style:const TextStyle(fontSize:12,fontWeight:FontWeight.w900,color:KbColors.text))])))] ]))],
+   const SizedBox(height:18),ExpansionTile(tilePadding:EdgeInsets.zero,title:const Text('Advanced connection',style:TextStyle(fontWeight:FontWeight.w800)),subtitle:Text(widget.ws?'Backend connected':'Backend offline',style:TextStyle(color:widget.ws?KbColors.cyan:KbColors.coral)),children:[TextField(controller:c,decoration:InputDecoration(labelText:'Backend URL',suffixIcon:Icon(widget.ws?Icons.cloud_done:Icons.cloud_off))),const SizedBox(height:10),FilledButton(onPressed:()async{final v=c.text.trim().replaceAll(RegExp(r'/$'),'');widget.onUrl(v);setState(()=>msg='Connection saved');},child:const Text('Save connection'))]),
+   if(msg!=null)Padding(padding:const EdgeInsets.only(top:10),child:Notice(msg!)),
+ ]));}
+}
 class RobotPanel extends StatelessWidget{
   const RobotPanel({super.key,required this.child,this.padding=const EdgeInsets.all(16),this.glow=true,this.onTap,this.highlight=false});
   final Widget child; final EdgeInsets padding; final bool glow,highlight; final VoidCallback? onTap;
@@ -710,6 +731,11 @@ class IndexStrip extends StatelessWidget{
 class _HudDivider extends StatelessWidget{const _HudDivider();@override Widget build(BuildContext context)=>Container(width:1,height:38,color:KbColors.border);}
 class _HomeMetric extends StatelessWidget{const _HomeMetric({required this.label,required this.value,required this.accent});final String label,value;final Color accent;@override Widget build(BuildContext context)=>Column(children:[Text(label,style:const TextStyle(fontSize:8,letterSpacing:.8,fontWeight:FontWeight.w900,color:KbColors.textMuted)),const SizedBox(height:5),FittedBox(fit:BoxFit.scaleDown,child:Text(value,style:TextStyle(fontSize:15,fontWeight:FontWeight.w900,color:accent)))]);}
 class _CompactState extends StatelessWidget{const _CompactState({required this.icon,required this.label,required this.value,required this.ok});final IconData icon;final String label,value;final bool ok;@override Widget build(BuildContext context)=>Container(height:56,padding:const EdgeInsets.symmetric(horizontal:8),decoration:BoxDecoration(color:KbColors.cardSoft,borderRadius:BorderRadius.circular(12),border:Border.all(color:KbColors.border)),child:Row(children:[Icon(icon,size:17,color:ok?KbColors.cyan:KbColors.textMuted),const SizedBox(width:6),Expanded(child:Column(mainAxisAlignment:MainAxisAlignment.center,crossAxisAlignment:CrossAxisAlignment.start,children:[Text(label,style:const TextStyle(fontSize:7,fontWeight:FontWeight.w900,color:KbColors.textMuted)),const SizedBox(height:2),FittedBox(fit:BoxFit.scaleDown,alignment:Alignment.centerLeft,child:Text(value,style:TextStyle(fontSize:9,fontWeight:FontWeight.w900,color:ok?KbColors.text:KbColors.textMuted)))]))]));}
+
+List<Map<String,dynamic>> _dedupeInstrumentRows(Iterable<Map<String,dynamic>> rows){final seen=<String>{};final out=<Map<String,dynamic>>[];for(final x in rows){final token='${x['instrument_token']??x['instrumentToken']??x['token']??x['pSymbol']??x['p_symbol']??''}';final label=_instrumentLabel(x);final key=token.isNotEmpty?token:'$label|${x['exchange_segment']??x['exchangeSegment']??''}';if(seen.add(key))out.add(x);}return out;}
+int _recordCount(dynamic payload){if(payload is List)return payload.length;if(payload is Map){for(final key in ['data','items','rows','result','results','positions','holdings','orders']){final v=payload[key];if(v is List)return v.length;}return payload.isEmpty?0:1;}return 0;}
+List<(String,String)> _fundMetrics(dynamic payload){final out=<(String,String)>[];final seen=<String>{};void walk(dynamic v){if(v is Map){for(final e in v.entries){final k='${e.key}';final x=e.value;final lk=k.toLowerCase();if(x is num||double.tryParse('$x')!=null){if(['cash','margin','available','balance','util','used','collateral','limit','fund'].any((needle)=>lk.contains(needle))&&seen.add(lk)){final n=_num(x);out.add((_prettyKey(k),_money(n)));}}else if(x is Map||x is List){walk(x);}}}else if(v is List){for(final x in v)walk(x);}}walk(payload);return out;}
+String _prettyKey(String k)=>k.replaceAll(RegExp(r'[_-]+'),' ').split(' ').where((x)=>x.isNotEmpty).map((x)=>x[0].toUpperCase()+x.substring(1)).join(' ');
 
 Iterable<Map<String,dynamic>> _collectInstrumentRows(dynamic payload) sync* {
   if(payload is Map){

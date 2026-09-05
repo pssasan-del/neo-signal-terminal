@@ -17,20 +17,33 @@ class InstrumentResolver:
         key = "|".join(str(x or "") for x in (exchange_segment, symbol.upper(), expiry, option_type, strike_price, ignore_50multiple))
         item = self.cache.get(key)
         if item and time.time() - item[0] < self.ttl_sec:
-            return {"cached": True, "data": item[1]}
-        client = broker._ensure_client()
-        data = await asyncio.to_thread(client.search_scrip, exchange_segment, symbol, expiry, option_type, strike_price, ignore_50multiple)
-        self.cache[key] = (time.time(), data)
+            data = item[1]
+        else:
+            data = None
+        if data is None:
+            client = broker._ensure_client()
+            data = await asyncio.to_thread(client.search_scrip, exchange_segment, symbol, expiry, option_type, strike_price, ignore_50multiple)
+            self.cache[key] = (time.time(), data)
+        normalized = []
         try:
             from app.services.options import flatten_records
             for row in flatten_records(data):
-                if isinstance(row, dict):
-                    token = row.get("instrument_token") or row.get("instrumentToken") or row.get("token") or row.get("pSymbol") or row.get("p_symbol")
-                    if token:
-                        recovery_store.remember_instrument(f"{exchange_segment}|{token}", row)
+                if not isinstance(row, dict):
+                    continue
+                token = row.get("instrument_token") or row.get("instrumentToken") or row.get("token") or row.get("pSymbol") or row.get("p_symbol")
+                trading_symbol = row.get("trading_symbol") or row.get("tradingSymbol") or row.get("pTrdSymbol") or row.get("p_trd_symbol") or row.get("symbol") or row.get("name")
+                segment = row.get("exchange_segment") or row.get("exchangeSegment") or row.get("segment") or exchange_segment
+                if token:
+                    recovery_store.remember_instrument(f"{segment}|{token}", row)
+                    normalized.append({
+                        **row,
+                        "instrument_token": str(token),
+                        "exchange_segment": str(segment),
+                        "trading_symbol": str(trading_symbol or symbol).strip(),
+                    })
         except Exception:
-            pass
-        return {"cached": False, "data": data}
+            normalized = []
+        return {"cached": item is not None and time.time() - item[0] < self.ttl_sec, "data": data, "normalized": normalized}
 
     async def resolve_option(self, underlying: str, expiry: str, option_type: str, strike_price: float,
                              exchange_segment: str = "NSEFO") -> Any:

@@ -177,6 +177,8 @@ class ScannerController:
             "configured_count": len(names),
             "resolved_count": len(self.resolved),
             "failed_count": len(self.failed),
+            "operational_count": len(self.resolved),
+            "coverage_ok": len(self.resolved) >= 44,
             "ready_count": ready_count,
             "warming_count": max(0, len(history) - ready_count),
             "minimum_history": minimum_history,
