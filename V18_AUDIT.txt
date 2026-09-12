@@ -1,0 +1,15 @@
+V18 acceptance gates
+[PASS] backend compile
+[PASS] backend tests 23/23
+[PASS] lifecycle persistence
+[PASS] signal generated timestamp field available and rendered
+[PASS] scanner stock signal broker metadata persisted
+[PASS] old stock signal on-demand trade metadata resolver
+[PASS] closed signals blocked from fresh signal-order action
+[PASS] normal websocket reconnect loop retains authenticated state
+[PASS] explicit logout confirmation added
+[PASS] candle DB preserved by deploy script
+[PASS] signal lifecycle DB preserved by deploy script
+[PASS] mobile source UTF-8 / no NUL
+[PENDING EXTERNAL] GitHub Flutter Android compile
+[PENDING EXTERNAL] live Kotak order acknowledgement during market session

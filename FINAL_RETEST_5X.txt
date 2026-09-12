@@ -1,0 +1,28 @@
+LION BRO FINAL REPAIR — RETEST SUMMARY
+
+Backend pytest:
+Run 1: 25/25 PASS
+Run 2: 25/25 PASS
+Run 3: 25/25 PASS
+Run 4: 25/25 PASS
+Run 5: 25/25 PASS
+
+Dart source structural delimiter validation:
+Run 1: PASS
+Run 2: PASS
+Run 3: PASS
+Run 4: PASS
+Run 5: PASS
+
+Verified source fixes:
+- Android label is LION BRO.
+- Old King Bro launcher icon resources removed/replaced.
+- Roaring-lion LION BRO launcher PNGs generated for mdpi/hdpi/xhdpi/xxhdpi/xxxhdpi and adaptive v26 icon.
+- Home parses backend indices list + nested tick.last_traded_price.
+- Watchlist parses last_traded_price.
+- Scanner raw backend map dump removed.
+- Portfolio parses nested holdings/limits and marks PREV CLOSE when applicable.
+- Manual Trade keeps execution intent -> explicit confirmation.
+- No strategy/option-parser redesign.
+
+NOTE: Flutter SDK is not installed in this execution environment, so a real flutter analyze/APK compile is not claimed here. GitHub/Android Flutter build remains the definitive compile test.

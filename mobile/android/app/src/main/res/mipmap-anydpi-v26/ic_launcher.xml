@@ -1,0 +1,4 @@
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/lion_bro_bg"/>
+    <foreground android:drawable="@drawable/lion_bro_launcher_foreground"/>
+</adaptive-icon>
