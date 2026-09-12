@@ -13,6 +13,7 @@ class BackendConfig {
 
   static Future<void> saveBaseUrl(String url) async {
     final p = await SharedPreferences.getInstance();
-    await p.setString('lion_bro_api_url', url.trim().replaceAll(RegExp(r'/+$'), ''));
+    await p.setString(
+        'lion_bro_api_url', url.trim().replaceAll(RegExp(r'/+$'), ''));
   }
 }
