@@ -1,4 +1,4 @@
-﻿name: Build LION BRO Windows EXE
+name: Build LION BRO Windows EXE
 on:
   workflow_dispatch:
   push:
@@ -30,7 +30,7 @@ jobs:
       - name: Dependencies
         run: flutter pub get
       - name: Format check
-        run: dart format lib
+        run: dart format lib test
       - name: Analyze
         run: flutter analyze
       - name: Tests
@@ -51,4 +51,3 @@ jobs:
           name: LION-BRO-Windows-EXE
           path: mobile/LION_BRO_WINDOWS_RELEASE.zip
           if-no-files-found: error
-

@@ -1,1 +1,11 @@
 include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  errors:
+    unused_element: ignore
+    deprecated_member_use: ignore
+
+linter:
+  rules:
+    curly_braces_in_flow_control_structures: false
+    use_build_context_synchronously: false

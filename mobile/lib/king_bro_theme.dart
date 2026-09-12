@@ -77,26 +77,12 @@ class KingBroTheme {
       visualDensity: VisualDensity.compact,
       textTheme: const TextTheme(
         bodyLarge: TextStyle(color: KbColors.text, height: 1.25, fontSize: 14),
-        bodyMedium: TextStyle(
-            color: KbColors.textSecondary, height: 1.25, fontSize: 13),
-        bodySmall:
-            TextStyle(color: KbColors.textMuted, height: 1.2, fontSize: 11),
-        titleLarge: TextStyle(
-            color: KbColors.text,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -.3),
-        titleMedium: TextStyle(
-            color: KbColors.text,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -.15),
-        headlineSmall: TextStyle(
-            color: KbColors.text,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -.4),
-        headlineMedium: TextStyle(
-            color: KbColors.text,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -.55),
+        bodyMedium: TextStyle(color: KbColors.textSecondary, height: 1.25, fontSize: 13),
+        bodySmall: TextStyle(color: KbColors.textMuted, height: 1.2, fontSize: 11),
+        titleLarge: TextStyle(color: KbColors.text, fontWeight: FontWeight.w800, letterSpacing: -.3),
+        titleMedium: TextStyle(color: KbColors.text, fontWeight: FontWeight.w800, letterSpacing: -.15),
+        headlineSmall: TextStyle(color: KbColors.text, fontWeight: FontWeight.w800, letterSpacing: -.4),
+        headlineMedium: TextStyle(color: KbColors.text, fontWeight: FontWeight.w800, letterSpacing: -.55),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
@@ -119,10 +105,8 @@ class KingBroTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        labelStyle: const TextStyle(
-            color: KbColors.textSecondary, fontWeight: FontWeight.w600),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        labelStyle: const TextStyle(color: KbColors.textSecondary, fontWeight: FontWeight.w600),
         hintStyle: const TextStyle(color: KbColors.textMuted),
         border: outline,
         enabledBorder: outline,
@@ -146,9 +130,7 @@ class KingBroTheme {
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return IconThemeData(
-              color: selected ? KbColors.crimson : KbColors.textMuted,
-              size: 22);
+          return IconThemeData(color: selected ? KbColors.crimson : KbColors.textMuted, size: 22);
         }),
       ),
       filledButtonTheme: FilledButtonThemeData(
@@ -156,10 +138,8 @@ class KingBroTheme {
           backgroundColor: KbColors.crimson,
           foregroundColor: Colors.white,
           minimumSize: const Size(0, 46),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          textStyle:
-              const TextStyle(fontWeight: FontWeight.w800, letterSpacing: .1),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          textStyle: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: .1),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -167,8 +147,7 @@ class KingBroTheme {
           foregroundColor: KbColors.crimson,
           side: const BorderSide(color: KbColors.borderStrong),
           minimumSize: const Size(0, 46),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           textStyle: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
