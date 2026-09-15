@@ -97,7 +97,7 @@ class _SplashPageState extends State<SplashPage> {
           const SizedBox(height: 12),
           const BrandTitle(size: 32),
           const SizedBox(height: 6),
-          const Text('TRADE SMART  Ã¢â‚¬Â¢  TRADE BOLD',
+          const Text('TRADE SMART  •  TRADE BOLD',
               style: TextStyle(
                   letterSpacing: 2.2,
                   fontSize: 11,
@@ -112,7 +112,7 @@ class _SplashPageState extends State<SplashPage> {
                   color: C.red,
                   backgroundColor: C.panel2)),
           const SizedBox(height: 10),
-          const Text('Loading marketsÃ¢â‚¬Â¦',
+          const Text('Loading markets…',
               style: TextStyle(color: C.muted, fontSize: 12)),
           const SizedBox(height: 30),
         ]),
@@ -186,7 +186,7 @@ class _LoginPageState extends State<LoginPage> {
                           const SizedBox(height: 10),
                           const BrandTitle(size: 30),
                           const SizedBox(height: 5),
-                          const Text('TRADE SMART  Ã¢â‚¬Â¢  TRADE BOLD',
+                          const Text('TRADE SMART  •  TRADE BOLD',
                               style: TextStyle(
                                   color: C.muted,
                                   letterSpacing: 1.6,
@@ -447,13 +447,13 @@ class HomePage extends StatelessWidget {
                           style:
                               TextStyle(color: Colors.black54, fontSize: 12)),
                       SizedBox(height: 4),
-                      Text('Ã¢â€šÂ¹ 5,24,300',
+                      Text('₹ 5,24,300',
                           style: TextStyle(
                               color: Colors.black,
                               fontSize: 25,
                               fontWeight: FontWeight.w900)),
                       SizedBox(height: 6),
-                      Text('Day P&L  +Ã¢â€šÂ¹8,245  (+1.60%)',
+                      Text('Day P&L  +₹8,245  (+1.60%)',
                           style: TextStyle(
                               color: Color(0xFF009E65),
                               fontWeight: FontWeight.w800))
@@ -564,7 +564,7 @@ class WatchlistPage extends StatelessWidget {
             child: TextField(
                 decoration: InputDecoration(
                     prefixIcon: const Icon(Icons.search),
-                    hintText: 'Search stock, index, or symbolÃ¢â‚¬Â¦',
+                    hintText: 'Search stock, index, or symbol…',
                     filled: true,
                     fillColor: C.panel,
                     contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -931,7 +931,7 @@ class _TradePageState extends State<TradePage> {
             child: _DarkField(icon: Icons.currency_rupee, hint: '126.40')),
         const Padding(
             padding: EdgeInsets.fromLTRB(16, 14, 16, 4),
-            child: Text('Margin Required  Ã¢â€šÂ¹ 6,320 (Approx)',
+            child: Text('Margin Required  ₹ 6,320 (Approx)',
                 style: TextStyle(color: C.muted))),
         Padding(
             padding: const EdgeInsets.all(16),
@@ -949,7 +949,7 @@ class _TradePageState extends State<TradePage> {
                                 title: Text(
                                     '${buy ? 'BUY' : 'SELL'} order preview'),
                                 content: Text(
-                                    'NIFTY 24500 CE\n$qty lot(s) Ã¢â‚¬Â¢ $product Ã¢â‚¬Â¢ $order\n\nPrototype only Ã¢â‚¬â€ no broker order is sent.'),
+                                    'NIFTY 24500 CE\n$qty lot(s) • $product • $order\n\nPrototype only — no broker order is sent.'),
                                 actions: [
                                   TextButton(
                                       onPressed: () => Navigator.pop(context),
@@ -1074,23 +1074,23 @@ class PortfolioPage extends StatelessWidget {
         const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: _WhiteInfoCard(children: [
-              _PnlRow('NIFTY 24500 CE', 'Qty 50 Ã¢â‚¬Â¢ LTP 168.50',
-                  '+Ã¢â€šÂ¹2,450.00', true),
-              _PnlRow('BANKNIFTY 51200 PE', 'Qty 25 Ã¢â‚¬Â¢ LTP 155.60',
-                  '-Ã¢â€šÂ¹1,120.00', false),
-              _PnlRow('RELIANCE', 'Qty 10 Ã¢â‚¬Â¢ LTP 3,025.00',
-                  '+Ã¢â€šÂ¹850.00', true)
+              _PnlRow('NIFTY 24500 CE', 'Qty 50 • LTP 168.50',
+                  '+₹2,450.00', true),
+              _PnlRow('BANKNIFTY 51200 PE', 'Qty 25 • LTP 155.60',
+                  '-₹1,120.00', false),
+              _PnlRow('RELIANCE', 'Qty 10 • LTP 3,025.00',
+                  '+₹850.00', true)
             ])),
         const SizedBox(height: 16),
         const _SectionTitle('Holdings'),
         const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: _WhiteInfoCard(children: [
-              _PnlRow('RELIANCE', 'Invested Ã¢â€šÂ¹1,20,000', '+Ã¢â€šÂ¹22,450',
+              _PnlRow('RELIANCE', 'Invested ₹1,20,000', '+₹22,450',
                   true),
               _PnlRow(
-                  'HDFCBANK', 'Invested Ã¢â€šÂ¹98,500', '+Ã¢â€šÂ¹16,320', true),
-              _PnlRow('TCS', 'Invested Ã¢â€šÂ¹75,200', '+Ã¢â€šÂ¹12,650', true)
+                  'HDFCBANK', 'Invested ₹98,500', '+₹16,320', true),
+              _PnlRow('TCS', 'Invested ₹75,200', '+₹12,650', true)
             ])),
         const SizedBox(height: 16),
         Padding(
@@ -1104,13 +1104,13 @@ class PortfolioPage extends StatelessWidget {
                     children: [
                       Text('Available Cash', style: TextStyle(color: C.muted)),
                       SizedBox(height: 5),
-                      Text('Ã¢â€šÂ¹ 1,25,430',
+                      Text('₹ 1,25,430',
                           style: TextStyle(
                               fontSize: 24, fontWeight: FontWeight.w900)),
                       SizedBox(height: 12),
-                      Text('Used Margin  Ã¢â€šÂ¹ 83,220',
+                      Text('Used Margin  ₹ 83,220',
                           style: TextStyle(color: C.muted)),
-                      Text('Total Limit  Ã¢â€šÂ¹ 2,50,000',
+                      Text('Total Limit  ₹ 2,50,000',
                           style: TextStyle(color: C.muted))
                     ]))),
         const SizedBox(height: 18),
@@ -1126,7 +1126,7 @@ double _n(dynamic v) {
 String _money(dynamic v) {
   if (v == null || '$v'.trim().isEmpty) return '--';
   final n = _n(v);
-  return 'Ã¢â€šÂ¹${n.toStringAsFixed(2)}';
+  return '₹${n.toStringAsFixed(2)}';
 }
 
 Map<String, dynamic> _m(dynamic v) => v is Map<String, dynamic>
@@ -1763,7 +1763,7 @@ class _LiveScannerPageState extends State<LiveScannerPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(children: [
               _StatusPill(
-                  text: active ? 'RUNNING Ã¢â‚¬Â¢ $group' : 'STOPPED',
+                  text: active ? 'RUNNING • $group' : 'STOPPED',
                   color: active ? C.green : C.muted),
               const Spacer(),
               Text('$resolved / $configured resolved',
@@ -1807,7 +1807,7 @@ class _LiveScannerPageState extends State<LiveScannerPage> {
                             style:
                                 const TextStyle(fontWeight: FontWeight.w800)),
                         subtitle: Text(
-                            '${m['exchange_segment'] ?? '--'} Ã¢â‚¬Â¢ token ${m['instrument_token'] ?? '--'}',
+                            '${m['exchange_segment'] ?? '--'} • token ${m['instrument_token'] ?? '--'}',
                             style:
                                 const TextStyle(color: C.muted, fontSize: 11)),
                         trailing: const Icon(Icons.check_circle,
@@ -2018,8 +2018,8 @@ class _LivePortfolioPageState extends State<LivePortfolioPage> {
           ? '--'
           : '${_n(ltp).toStringAsFixed(2)}${quoteStatus == 'PREV_CLOSE' ? ' PREV CLOSE' : ''}';
       final sub = holding
-          ? 'Qty ${m['quantity'] ?? m['qty'] ?? '--'} Ã¢â‚¬Â¢ LTP $priceText'
-          : 'Qty ${m['net_quantity'] ?? m['quantity'] ?? '--'} Ã¢â‚¬Â¢ LTP $priceText';
+          ? 'Qty ${m['quantity'] ?? m['qty'] ?? '--'} • LTP $priceText'
+          : 'Qty ${m['net_quantity'] ?? m['quantity'] ?? '--'} • LTP $priceText';
       return _PnlRow(_sym(m), sub,
           pnl == 0 ? '--' : '${pnl >= 0 ? '+' : ''}${_money(pnl)}', pnl >= 0);
     }).toList();
@@ -2234,7 +2234,7 @@ class _LiveTradePageState extends State<LiveTradePage> {
           backgroundColor: C.panel,
           title: const Text('Confirm broker order'),
           content: Text(
-            '${buy ? 'BUY' : 'SELL'} ${symbolController.text}\nQty $q Ã¢â‚¬Â¢ $product Ã¢â‚¬Â¢ $orderType\nReference Ã¢â€šÂ¹${p.toStringAsFixed(2)}\n\nThis is the final manual confirmation step.',
+            '${buy ? 'BUY' : 'SELL'} ${symbolController.text}\nQty $q • $product • $orderType\nReference ₹${p.toStringAsFixed(2)}\n\nThis is the final manual confirmation step.',
           ),
           actions: [
             TextButton(
@@ -2374,7 +2374,7 @@ class _LiveTradePageState extends State<LiveTradePage> {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
           child: Text(
-            'Safety: direct /orders/place is disabled by backend. This app uses execution intent Ã¢â€ â€™ explicit confirmation only.',
+            'Safety: direct /orders/place is disabled by backend. This app uses execution intent → explicit confirmation only.',
             style: TextStyle(color: C.muted, fontSize: 11),
           ),
         ),
@@ -2532,7 +2532,7 @@ class _LiveOptionPageState extends State<LiveOptionPage> {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Resolved broker contracts Ã¢â‚¬â€ tap a contract or use BUY / SELL',
+                    'Resolved broker contracts — tap a contract or use BUY / SELL',
                     style: TextStyle(color: C.muted, fontSize: 12),
                   ),
                 ),
@@ -2635,7 +2635,7 @@ class _LiveOptionPageState extends State<LiveOptionPage> {
                                       Text(
                                           'IV ${m['option_iv'] ?? m['iv'] ?? '--'}'),
                                       Text(
-                                          'ÃŽâ€ ${m['option_delta'] ?? m['delta'] ?? '--'}'),
+                                          'Δ ${m['option_delta'] ?? m['delta'] ?? '--'}'),
                                       Text('Expiry ${m['expiry'] ?? '--'}'),
                                       Text('Strike ${m['strike'] ?? '--'}'),
                                     ],
@@ -2776,7 +2776,7 @@ class OptionContractPage extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        _ltp > 0 ? 'Ã¢â€šÂ¹${_ltp.toStringAsFixed(2)}' : '--',
+                        _ltp > 0 ? '₹${_ltp.toStringAsFixed(2)}' : '--',
                         style: const TextStyle(
                             fontSize: 30, fontWeight: FontWeight.w900),
                       ),
