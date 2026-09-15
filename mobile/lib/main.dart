@@ -2151,7 +2151,7 @@ class LiveTradePage extends StatefulWidget {
     required this.api,
     this.initialSymbol = '',
     this.initialPrice,
-    this.initialSegment = 'NSEFO',
+    this.initialSegment = 'nse_fo',
     this.initialBuy = true,
   });
 
@@ -2185,7 +2185,7 @@ class _LiveTradePageState extends State<LiveTradePage> {
           ? widget.initialPrice!.toStringAsFixed(2)
           : '',
     );
-    segment = widget.initialSegment.isEmpty ? 'NSEFO' : widget.initialSegment;
+    segment = widget.initialSegment.isEmpty ? 'nse_fo' : widget.initialSegment;
     buy = widget.initialBuy;
   }
 
@@ -2314,7 +2314,7 @@ class _LiveTradePageState extends State<LiveTradePage> {
           child: Wrap(
             spacing: 8,
             runSpacing: 8,
-            children: ['NSEFO', 'NSECM', 'BSEFO', 'MCX']
+            children: ['nse_fo', 'nse_cm', 'bse_fo', 'MCX']
                 .map((x) => ChoiceChip(
                     label: Text(x),
                     selected: segment == x,
@@ -2460,7 +2460,7 @@ class _LiveOptionPageState extends State<LiveOptionPage> {
     final u =
         '${m['underlying_symbol'] ?? m['symbol'] ?? m['trading_symbol'] ?? ''}'
             .toUpperCase();
-    return u.contains('SENSEX') ? 'BSEFO' : 'NSEFO';
+    return u.contains('SENSEX') ? 'bse_fo' : 'nse_fo';
   }
 
   double _priceFor(Map m) => _n(
@@ -2710,7 +2710,7 @@ class OptionContractPage extends StatelessWidget {
     final u =
         '${contract['underlying_symbol'] ?? contract['symbol'] ?? _symbol}'
             .toUpperCase();
-    return u.contains('SENSEX') ? 'BSEFO' : 'NSEFO';
+    return u.contains('SENSEX') ? 'bse_fo' : 'nse_fo';
   }
 
   void _trade(BuildContext context, bool buy) {
