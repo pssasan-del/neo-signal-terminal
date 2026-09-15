@@ -33,12 +33,12 @@ class InstrumentResolver:
         return {"cached": False, "data": data}
 
     async def resolve_option(self, underlying: str, expiry: str, option_type: str, strike_price: float,
-                             exchange_segment: str = "NSEFO") -> Any:
+                             exchange_segment: str = "nse_fo") -> Any:
         return await self.search(exchange_segment, underlying, expiry, option_type.upper(), str(strike_price), False)
 
     async def scan_option_candidates(self, *, underlying: str, expiry: str, option_type: str,
                                      underlying_ltp: float, strike_step: float,
-                                     strikes_each_side: int = 2, exchange_segment: str = "NSEFO") -> dict[str, Any]:
+                                     strikes_each_side: int = 2, exchange_segment: str = "nse_fo") -> dict[str, Any]:
         """Search strikes around ATM, enrich with broker quotes, then rank quality."""
         from app.services.options import flatten_records, option_selector
         if underlying_ltp <= 0 or strike_step <= 0:
@@ -83,11 +83,11 @@ class InstrumentResolver:
 
         key = symbol_key.upper().replace(' ', '')
         if 'BANK' in key:
-            underlying, segment, strike_step = 'BANKNIFTY', 'NSEFO', 100.0
+            underlying, segment, strike_step = 'BANKNIFTY', 'nse_fo', 100.0
         elif 'SENSEX' in key:
-            underlying, segment, strike_step = 'SENSEX', 'BSEFO', 100.0
+            underlying, segment, strike_step = 'SENSEX', 'bse_fo', 100.0
         elif 'NIFTY' in key:
-            underlying, segment, strike_step = 'NIFTY', 'NSEFO', 50.0
+            underlying, segment, strike_step = 'NIFTY', 'nse_fo', 50.0
         else:
             return {'status':'REJECTED','reason':'NOT_INDEX_SIGNAL'}
         option_type = 'CE' if str(side).upper() == 'BUY' else 'PE'

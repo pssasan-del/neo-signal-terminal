@@ -423,7 +423,7 @@ class BrokerService:
             out=[]
             if isinstance(x, dict):
                 keys={str(k) for k in x}
-                if any(k in keys for k in ('trading_symbol','tradingSymbol','symbol','pTrdSymbol','displayName')) and any(k in keys for k in ('quantity','qty','net_quantity','netQty','holdingQty')):
+                if any(k in keys for k in ('trading_symbol','tradingSymbol','symbol','pTrdSymbol','p_trd_symbol','displayName','display_name','securityName','security_name','displaySymbol','display_symbol','scripName','scrip_name')) and any(k in keys for k in ('quantity','qty','net_quantity','netQty','holdingQty','holding_quantity','holdingQuantity','totalQty','total_quantity','sellableQty','sellable_quantity','dpQty','dp_quantity')):
                     out.append(x)
                 for v in x.values(): out.extend(walk(v))
             elif isinstance(x, list):
@@ -441,9 +441,9 @@ class BrokerService:
 
         rows=[]
         for rec in walk(raw):
-            symbol=str(pick(rec,'trading_symbol','tradingSymbol','symbol','pTrdSymbol','displayName') or '--')
-            qty=num(pick(rec,'quantity','qty','net_quantity','netQty','holdingQty')) or 0.0
-            avg=num(pick(rec,'average_price','averagePrice','avgPrice','buy_avg','buyAvg'))
+            symbol=str(pick(rec,'trading_symbol','tradingSymbol','symbol','pTrdSymbol','p_trd_symbol','displayName','display_name','securityName','security_name','displaySymbol','display_symbol','scripName','scrip_name') or '--')
+            qty=num(pick(rec,'quantity','qty','net_quantity','netQty','holdingQty','holding_quantity','holdingQuantity','totalQty','total_quantity','sellableQty','sellable_quantity','dpQty','dp_quantity')) or 0.0
+            avg=num(pick(rec,'average_price','averagePrice','avgPrice','buy_avg','buyAvg','averagePriceInDelivery','avg_price','buyAveragePrice'))
             token=pick(rec,'instrument_token','instrumentToken','token','pSymbol','p_symbol')
             segment=str(pick(rec,'exchange_segment','exchangeSegment','segment','pExchSeg') or 'nse_cm')
             segkey=segment.strip().lower().replace('-','_')

@@ -7,7 +7,7 @@ from app.services.lifecycle import signal_lifecycle
 class SignalPipeline:
     """Combines underlying strategy output with deterministic option candidate selection."""
     def choose_option_from_payload(self, *, signal:dict[str,Any], underlying_ltp:float,
-                                   option_payload:Any, option_type:str, exchange_segment:str="NSEFO") -> dict[str,Any]:
+                                   option_payload:Any, option_type:str, exchange_segment:str="nse_fo") -> dict[str,Any]:
         records=flatten_records(option_payload)
         ranked=option_selector.rank(records,underlying_ltp=underlying_ltp,option_type=option_type,fallback_segment=exchange_segment)
         accepted=[x for x in ranked if x["accepted"]]

@@ -26,7 +26,7 @@ class OptionResolveRequest(BaseModel):
     expiry: str
     option_type: Literal["CE", "PE"]
     strike_price: float
-    exchange_segment: str = "NSEFO"
+    exchange_segment: str = "nse_fo"
 
 class SignalEvalRequest(BaseModel):
     symbol_key: str
@@ -65,12 +65,12 @@ class OptionScanRequest(BaseModel):
     underlying_ltp: float = Field(gt=0)
     strike_step: float = Field(gt=0)
     strikes_each_side: int = Field(default=2, ge=0, le=10)
-    exchange_segment: str = "NSEFO"
+    exchange_segment: str = "nse_fo"
 
 class OptionRankRequest(BaseModel):
     underlying_ltp: float = Field(gt=0)
     option_type: Literal["CE", "PE"]
-    exchange_segment: str = "NSEFO"
+    exchange_segment: str = "nse_fo"
     records: list[dict]
 
 class LifecycleCreateRequest(BaseModel):

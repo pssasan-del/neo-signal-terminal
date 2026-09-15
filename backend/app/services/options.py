@@ -21,6 +21,18 @@ def _first(d: dict[str, Any], names: Iterable[str]) -> Any:
     return None
 
 
+
+def _canonical_segment(v: Any, fallback: str = "nse_fo") -> str:
+    raw = str(v or fallback).strip().lower().replace("-", "_").replace(" ", "")
+    aliases = {
+        "nsefo": "nse_fo", "nse_fo": "nse_fo",
+        "bsefo": "bse_fo", "bse_fo": "bse_fo",
+        "nsecm": "nse_cm", "nse_cm": "nse_cm",
+        "bsecm": "bse_cm", "bse_cm": "bse_cm",
+        "mcxfo": "mcx_fo", "mcx_fo": "mcx_fo",
+    }
+    return aliases.get(raw, raw or fallback)
+
 def flatten_records(payload: Any) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
     def walk(x: Any) -> None:
@@ -159,7 +171,7 @@ class OptionSelector:
         self.max_distance_pct=max_distance_pct; self.require_oi=require_oi; self.require_greeks=require_greeks
         self.risk_free_rate=risk_free_rate
 
-    def normalize(self, rec: dict[str, Any], *, fallback_segment: str="NSEFO", fallback_type: str="") -> OptionCandidate | None:
+    def normalize(self, rec: dict[str, Any], *, fallback_segment: str="nse_fo", fallback_type: str="") -> OptionCandidate | None:
         token=str(_first(rec, ("instrument_token","instrumentToken","token","pSymbol","p_symbol","pToken","instrumenttoken")) or "")
         symbol=str(_first(rec, ("trading_symbol","tradingSymbol","symbol","pTrdSymbol","p_trd_symbol","pTradingSymbol","tradingsymbol")) or "")
         strike=_num(_first(rec, ("strike_price","strikePrice","strike","stkprc","pStrikePrice","dStrikePrice")))
@@ -170,7 +182,7 @@ class OptionSelector:
             if upper_symbol.endswith("CE"): raw_type="CE"
             elif upper_symbol.endswith("PE"): raw_type="PE"
         option_type=str(raw_type or fallback_type).upper()
-        segment=str(_first(rec,("exchange_segment","exchangeSegment","segment","exchange_segment_name","pExchSeg")) or fallback_segment)
+        segment=_canonical_segment(_first(rec,("exchange_segment","exchangeSegment","segment","exchange_segment_name","pExchSeg")), fallback_segment)
         expiry=_first(rec,("expiry","expiry_date","expiryDate","expdt","pExpiryDate","pExpiry","expirydate","expDate"))
         iv=_num(_first(rec,("iv","IV","implied_volatility","impliedVolatility","implied_vol","impliedVol")))
         if iv is not None and iv > 3: iv/=100.0
@@ -248,7 +260,7 @@ class OptionSelector:
         return c
 
     def rank(self, records: list[dict[str,Any]], *, underlying_ltp: float,
-             option_type: str, fallback_segment: str="NSEFO") -> list[dict[str,Any]]:
+             option_type: str, fallback_segment: str="nse_fo") -> list[dict[str,Any]]:
         ranked=[]
         for rec in records:
             c=self.normalize(rec,fallback_segment=fallback_segment,fallback_type=option_type)
