@@ -144,12 +144,109 @@ class InstrumentResolver:
             'exchange_segment':segment,'expiry':nearest_expiry,'atm':atm,'selected':selected,'candidates':ranked[:8],
         }
 
+    async def index_option_chain(self, *, symbol_key: str, strikes_each_side: int = 2) -> dict[str, Any]:
+        """Return a compact real broker option chain for NIFTY/BANKNIFTY/SENSEX.
+
+        The chain is broker-discovered; no synthetic trading symbols or premiums are created.
+        Only the nearest live expiry and ATM +/- requested strikes are quoted to control API load.
+        """
+        from app.services.options import flatten_records, option_selector, _expiry_years
+
+        key = symbol_key.upper().replace(' ', '')
+        if 'BANK' in key:
+            underlying, segment, strike_step = 'BANKNIFTY', 'nse_fo', 100.0
+            live_key = 'nse_cm|Nifty Bank'
+        elif 'SENSEX' in key:
+            underlying, segment, strike_step = 'SENSEX', 'bse_fo', 100.0
+            live_key = 'bse_cm|Sensex'
+        elif 'NIFTY' in key:
+            underlying, segment, strike_step = 'NIFTY', 'nse_fo', 50.0
+            live_key = 'nse_cm|Nifty 50'
+        else:
+            return {'status': 'REJECTED', 'reason': 'NOT_SUPPORTED_INDEX'}
+
+        tick = broker.latest_ticks.get(live_key) or broker.latest_ticks.get(symbol_key) or {}
+        underlying_ltp = None
+        if isinstance(tick, dict):
+            for name in ('last_traded_price', 'ltp', 'lastPrice', 'last_price', 'price'):
+                try:
+                    if tick.get(name) is not None and float(tick[name]) > 0:
+                        underlying_ltp = float(tick[name])
+                        break
+                except (TypeError, ValueError):
+                    pass
+        if not underlying_ltp:
+            return {'status': 'REJECTED', 'reason': 'UNDERLYING_LTP_UNAVAILABLE', 'symbol_key': symbol_key}
+
+        try:
+            raw = await self.search(segment, underlying)
+        except Exception as exc:
+            return {'status': 'REJECTED', 'reason': 'OPTION_DISCOVERY_FAILED', 'detail': str(exc)}
+
+        records = flatten_records(raw.get('data', raw))
+        normalized: list[tuple[Any, dict[str, Any]]] = []
+        for rec in records:
+            c = option_selector.normalize(rec, fallback_segment=segment)
+            if c is None or c.option_type not in {'CE', 'PE'}:
+                continue
+            years = _expiry_years(c.expiry)
+            if not c.expiry or years is None:
+                continue
+            normalized.append((c, rec))
+        if not normalized:
+            return {'status': 'REJECTED', 'reason': 'NO_OPTION_INSTRUMENTS_FROM_BROKER'}
+
+        normalized.sort(key=lambda t: (_expiry_years(t[0].expiry) or 999.0, abs(t[0].strike-underlying_ltp)))
+        nearest_expiry = normalized[0][0].expiry
+        atm = round(underlying_ltp / strike_step) * strike_step
+        wanted_strikes = {atm + i * strike_step for i in range(-strikes_each_side, strikes_each_side + 1)}
+
+        chosen: dict[tuple[float, str], tuple[Any, dict[str, Any]]] = {}
+        for c, rec in normalized:
+            if c.expiry != nearest_expiry or c.strike not in wanted_strikes:
+                continue
+            chosen.setdefault((c.strike, c.option_type), (c, rec))
+
+        rows: list[dict[str, Any]] = []
+        for (strike, option_type), (c, rec) in sorted(chosen.items(), key=lambda x: (x[0][0], x[0][1])):
+            merged = dict(rec)
+            try:
+                q = await broker.quote(c.exchange_segment or segment, c.instrument_token, 'all')
+                qr = flatten_records(q)
+                match = next((x for x in qr if str(x.get('instrument_token') or x.get('instrumentToken') or x.get('token') or x.get('pSymbol') or x.get('p_symbol') or '') == str(c.instrument_token)), None)
+                if match:
+                    merged.update(match)
+            except Exception as exc:
+                merged['_quote_error'] = str(exc)
+            fresh = option_selector.normalize(merged, fallback_segment=segment, fallback_type=option_type)
+            if fresh is None:
+                continue
+            evaluated = option_selector.evaluate(fresh, underlying_ltp).to_dict()
+            rows.append(evaluated)
+
+        rows.sort(key=lambda x: (float(x.get('strike') or 0), 0 if x.get('option_type') == 'CE' else 1))
+        return {
+            'status': 'READY' if rows else 'REJECTED',
+            'reason': None if rows else 'NO_CHAIN_ROWS',
+            'symbol_key': live_key,
+            'underlying': underlying,
+            'underlying_ltp': underlying_ltp,
+            'exchange_segment': segment,
+            'expiry': nearest_expiry,
+            'atm': atm,
+            'strike_step': strike_step,
+            'rows': rows,
+        }
+
     async def sync_core_indices(self) -> dict[str, Any]:
         """Discover core index contracts through the broker search API and subscribe to verified tokens."""
         wanted = [
             ("nse_cm", "NIFTY", "Nifty 50"),
             ("nse_cm", "BANKNIFTY", "Nifty Bank"),
             ("bse_cm", "SENSEX", "Sensex"),
+            # Optional volatility confirmation for EXPLOSION DETECTOR. Failure to
+            # discover/subscribe VIX does not block the detector.
+            ("nse_cm", "INDIA VIX", "India VIX"),
         ]
         discovered=[]
         from app.services.options import flatten_records

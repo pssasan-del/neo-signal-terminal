@@ -1,66 +1,76 @@
 import 'package:flutter/material.dart';
 
-/// LION BRO — professional brokerage design system.
-/// Bright, high-contrast, data-first. No neon/candy gradients.
+/// LION BRO — bright professional brokerage design system.
+/// Visual direction: cool white surfaces, royal/navy blue structure and restrained
+/// electric-cyan motion accents. Crimson is reserved for SELL/risk/error states.
 class KbColors {
-  static const bgTop = Color(0xFFF4F6F8);
-  static const bgMid = Color(0xFFF7F8FA);
-  static const bgBottom = Color(0xFFF1F3F5);
-  static const glass = Color(0xFFFFFFFF);
+  static const bgTop = Color(0xFFF8FBFF);
+  static const bgMid = Color(0xFFF4F8FC);
+  static const bgBottom = Color(0xFFEDF4FA);
+  static const glass = Color(0xF7FFFFFF);
   static const card = Color(0xFFFFFFFF);
-  static const cardSoft = Color(0xFFF7F8FA);
+  static const cardSoft = Color(0xFFF1F7FC);
   static const cardStrong = Color(0xFFFFFFFF);
-  static const silverGlass = Color(0xFFF2F4F7);
-  static const border = Color(0xFFE3E6EA);
-  static const borderStrong = Color(0xFFCDD2D8);
+  static const silverGlass = Color(0xFFEAF2F8);
+  static const border = Color(0xFFD7E3ED);
+  static const borderStrong = Color(0xFFBACCDD);
 
-  // Keep the alias so existing source compiles, but map it to the brand red.
-  static const cyan = Color(0xFFB11226);
-  static const cyan2 = Color(0xFFD21F3C);
-  static const crimson = Color(0xFFB11226);
-  static const crimsonBright = Color(0xFFD21F3C);
-  static const obsidian = Color(0xFF101216);
-  static const obsidianSoft = Color(0xFF1B1E24);
+  static const royal = Color(0xFF173B8E);
+  static const royalBright = Color(0xFF2556C7);
+  static const navy = Color(0xFF0B1E46);
+  static const cyan = Color(0xFF12B7D6);
+  static const cyan2 = Color(0xFF67D9EA);
 
-  static const emerald = Color(0xFF138A5B);
-  static const blueGreen = Color(0xFF246B8F);
-  static const coral = Color(0xFFCE2438);
-  static const magenta = Color(0xFFB11226);
-  static const amber = Color(0xFF9A6500);
+  // Risk / order-side semantics stay distinct from the general UI accent.
+  static const crimson = Color(0xFFD7263D);
+  static const crimsonBright = Color(0xFFEE4057);
+  static const emerald = Color(0xFF0A9A73);
+  static const blueGreen = Color(0xFF087FA8);
+  static const coral = Color(0xFFD7263D);
+  static const magenta = Color(0xFF9E3E9D);
+  static const amber = Color(0xFF9C6900);
 
-  static const text = Color(0xFF121417);
-  static const textSecondary = Color(0xFF3B4048);
-  static const textMuted = Color(0xFF6C727C);
-  static const textFaint = Color(0xFF9DA3AD);
-  static const notice = Color(0xFFFFF7F2);
-  static const shadow = Color(0x12000000);
+  static const obsidian = Color(0xFF111827);
+  static const obsidianSoft = Color(0xFF263247);
+  static const text = Color(0xFF101828);
+  static const textSecondary = Color(0xFF344054);
+  static const textMuted = Color(0xFF667085);
+  static const textFaint = Color(0xFF98A2B3);
+  static const notice = Color(0xFFF0F8FF);
+  static const shadow = Color(0x140B1E46);
 
   static const backgroundGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [bgMid, bgBottom],
+    colors: [bgTop, bgMid, bgBottom],
+  );
+
+  static const brandGradient = LinearGradient(
+    begin: Alignment.centerLeft,
+    end: Alignment.centerRight,
+    colors: [royal, royalBright, cyan],
   );
 }
 
 class KingBroTheme {
   static ThemeData get theme {
     final scheme = ColorScheme.fromSeed(
-      seedColor: KbColors.crimson,
+      seedColor: KbColors.royal,
       brightness: Brightness.light,
       surface: KbColors.card,
     ).copyWith(
-      primary: KbColors.crimson,
-      secondary: KbColors.crimsonBright,
-      tertiary: KbColors.obsidian,
+      primary: KbColors.royal,
+      secondary: KbColors.cyan,
+      tertiary: KbColors.navy,
       surface: KbColors.card,
-      error: KbColors.coral,
+      error: KbColors.crimson,
       onPrimary: Colors.white,
-      onSecondary: Colors.white,
+      onSecondary: KbColors.navy,
       onSurface: KbColors.text,
     );
 
     final outline = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       borderSide: const BorderSide(color: KbColors.border),
     );
 
@@ -70,19 +80,33 @@ class KingBroTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: KbColors.bgMid,
       canvasColor: KbColors.bgMid,
-      splashColor: KbColors.crimson.withValues(alpha: 0.05),
-      highlightColor: KbColors.crimson.withValues(alpha: 0.03),
+      splashColor: KbColors.cyan.withValues(alpha: 0.08),
+      highlightColor: KbColors.royal.withValues(alpha: 0.04),
       dividerColor: KbColors.border,
       fontFamily: 'Roboto',
       visualDensity: VisualDensity.compact,
       textTheme: const TextTheme(
         bodyLarge: TextStyle(color: KbColors.text, height: 1.25, fontSize: 14),
-        bodyMedium: TextStyle(color: KbColors.textSecondary, height: 1.25, fontSize: 13),
-        bodySmall: TextStyle(color: KbColors.textMuted, height: 1.2, fontSize: 11),
-        titleLarge: TextStyle(color: KbColors.text, fontWeight: FontWeight.w800, letterSpacing: -.3),
-        titleMedium: TextStyle(color: KbColors.text, fontWeight: FontWeight.w800, letterSpacing: -.15),
-        headlineSmall: TextStyle(color: KbColors.text, fontWeight: FontWeight.w800, letterSpacing: -.4),
-        headlineMedium: TextStyle(color: KbColors.text, fontWeight: FontWeight.w800, letterSpacing: -.55),
+        bodyMedium: TextStyle(
+            color: KbColors.textSecondary, height: 1.25, fontSize: 13),
+        bodySmall:
+            TextStyle(color: KbColors.textMuted, height: 1.2, fontSize: 11),
+        titleLarge: TextStyle(
+            color: KbColors.text,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -.3),
+        titleMedium: TextStyle(
+            color: KbColors.text,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -.15),
+        headlineSmall: TextStyle(
+            color: KbColors.navy,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -.4),
+        headlineMedium: TextStyle(
+            color: KbColors.navy,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -.55),
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
@@ -98,56 +122,62 @@ class KingBroTheme {
         surfaceTintColor: Colors.transparent,
         shadowColor: KbColors.shadow,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           side: const BorderSide(color: KbColors.border),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-        labelStyle: const TextStyle(color: KbColors.textSecondary, fontWeight: FontWeight.w600),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
+        labelStyle: const TextStyle(
+            color: KbColors.textSecondary, fontWeight: FontWeight.w600),
         hintStyle: const TextStyle(color: KbColors.textMuted),
         border: outline,
         enabledBorder: outline,
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: KbColors.crimson, width: 1.3),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: KbColors.cyan, width: 1.5),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        height: 64,
+        height: 66,
         backgroundColor: Colors.white,
         elevation: 0,
-        indicatorColor: KbColors.crimson.withValues(alpha: .08),
+        indicatorColor: KbColors.cyan.withValues(alpha: .12),
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
           return TextStyle(
-            color: selected ? KbColors.crimson : KbColors.textMuted,
+            color: selected ? KbColors.royal : KbColors.textMuted,
             fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
             fontSize: 10,
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final selected = states.contains(WidgetState.selected);
-          return IconThemeData(color: selected ? KbColors.crimson : KbColors.textMuted, size: 22);
+          return IconThemeData(
+              color: selected ? KbColors.royal : KbColors.textMuted, size: 22);
         }),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: KbColors.crimson,
+          backgroundColor: KbColors.royal,
           foregroundColor: Colors.white,
           minimumSize: const Size(0, 46),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: .1),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
+          textStyle:
+              const TextStyle(fontWeight: FontWeight.w800, letterSpacing: .1),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: KbColors.crimson,
+          foregroundColor: KbColors.royal,
           side: const BorderSide(color: KbColors.borderStrong),
           minimumSize: const Size(0, 46),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(11)),
           textStyle: const TextStyle(fontWeight: FontWeight.w800),
         ),
       ),
@@ -159,7 +189,7 @@ class KingBroTheme {
       dialogTheme: DialogThemeData(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
     );
   }

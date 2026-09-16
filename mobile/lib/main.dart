@@ -3,19 +3,25 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'services/api_service.dart';
 import 'backend_config.dart';
+import 'king_bro_theme.dart';
 
 void main() => runApp(const LionBroApp());
 
 class C {
-  static const bg = Color(0xFF060A0E);
-  static const panel = Color(0xFF0D141B);
-  static const panel2 = Color(0xFF141C24);
-  static const border = Color(0xFF26323D);
-  static const red = Color(0xFFF10F36);
-  static const green = Color(0xFF16D58B);
-  static const text = Color(0xFFF5F7F9);
-  static const muted = Color(0xFF91A0AD);
-  static const whiteCard = Color(0xFFF8FAFB);
+  // Shared LION BRO palette used by both Android and Windows builds.
+  static const bg = KbColors.bgMid;
+  static const panel = KbColors.card;
+  static const panel2 = KbColors.cardSoft;
+  static const border = KbColors.border;
+  static const primary = KbColors.royal;
+  static const primaryBright = KbColors.royalBright;
+  static const cyan = KbColors.cyan;
+  static const navy = KbColors.navy;
+  static const red = KbColors.crimson;
+  static const green = KbColors.emerald;
+  static const text = KbColors.text;
+  static const muted = KbColors.textMuted;
+  static const whiteCard = KbColors.card;
 }
 
 class LionBroApp extends StatefulWidget {
@@ -42,16 +48,10 @@ class _LionBroAppState extends State<LionBroApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'LION BRO',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: C.bg,
-        colorScheme: const ColorScheme.dark(primary: C.red, secondary: C.green),
-        useMaterial3: true,
-        fontFamily: 'Roboto',
-      ),
+      theme: KingBroTheme.theme,
       home: baseUrl == null
           ? const Scaffold(
-              body: Center(child: CircularProgressIndicator(color: C.red)))
+              body: Center(child: CircularProgressIndicator(color: C.primary)))
           : SplashPage(baseUrl: baseUrl!),
     );
   }
@@ -90,7 +90,8 @@ class _SplashPageState extends State<SplashPage> {
                         end: Alignment.bottomCenter,
                         colors: [
                   Colors.transparent,
-                  Color(0x99060A0E),
+                  Color(0x5512B7D6),
+                  Color(0xCC0B1E46),
                   C.bg
                 ]))),
           ])),
@@ -109,7 +110,7 @@ class _SplashPageState extends State<SplashPage> {
               child: LinearProgressIndicator(
                   minHeight: 4,
                   borderRadius: BorderRadius.circular(10),
-                  color: C.red,
+                  color: C.cyan,
                   backgroundColor: C.panel2)),
           const SizedBox(height: 10),
           const Text('Loading markets…',
@@ -179,10 +180,23 @@ class _LoginPageState extends State<LoginPage> {
                     child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 420),
                         child: Column(children: [
-                          ClipRRect(
+                          Container(
+                            padding: const EdgeInsets.all(3),
+                            decoration: BoxDecoration(
+                              gradient: KbColors.brandGradient,
+                              borderRadius: BorderRadius.circular(27),
+                              boxShadow: [
+                                BoxShadow(
+                                    color: C.cyan.withOpacity(.20),
+                                    blurRadius: 24),
+                              ],
+                            ),
+                            child: ClipRRect(
                               borderRadius: BorderRadius.circular(24),
                               child: Image.asset('assets/lion_bro_logo.png',
-                                  height: 150, width: 150, fit: BoxFit.cover)),
+                                  height: 150, width: 150, fit: BoxFit.cover),
+                            ),
+                          ),
                           const SizedBox(height: 10),
                           const BrandTitle(size: 30),
                           const SizedBox(height: 5),
@@ -236,7 +250,7 @@ class _LoginPageState extends State<LoginPage> {
                               height: 52,
                               child: FilledButton(
                                   style: FilledButton.styleFrom(
-                                      backgroundColor: C.red,
+                                      backgroundColor: C.primary,
                                       shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(12))),
@@ -332,29 +346,29 @@ class _AppShellState extends State<AppShell> {
         bottomNavigationBar: NavigationBar(
             selectedIndex: tab,
             onDestinationSelected: (i) => setState(() => tab = i),
-            backgroundColor: const Color(0xFF0A1016),
-            indicatorColor: const Color(0x33F10F36),
+            backgroundColor: Colors.white,
+            indicatorColor: C.cyan.withOpacity(.12),
             destinations: const [
               NavigationDestination(
                   icon: Icon(Icons.home_outlined),
-                  selectedIcon: Icon(Icons.home, color: C.red),
+                  selectedIcon: Icon(Icons.home, color: C.primary),
                   label: 'Home'),
               NavigationDestination(
                   icon: Icon(Icons.star_border),
-                  selectedIcon: Icon(Icons.star, color: C.red),
+                  selectedIcon: Icon(Icons.star, color: C.primary),
                   label: 'Watchlist'),
               NavigationDestination(
                   icon: Icon(Icons.swap_vert),
-                  selectedIcon: Icon(Icons.swap_vert, color: C.red),
+                  selectedIcon: Icon(Icons.swap_vert, color: C.primary),
                   label: 'Trade'),
               NavigationDestination(
                   icon: Icon(Icons.receipt_long_outlined),
-                  selectedIcon: Icon(Icons.receipt_long, color: C.red),
+                  selectedIcon: Icon(Icons.receipt_long, color: C.primary),
                   label: 'Orders'),
               NavigationDestination(
                   icon: Icon(Icons.account_balance_wallet_outlined),
                   selectedIcon:
-                      Icon(Icons.account_balance_wallet, color: C.red),
+                      Icon(Icons.account_balance_wallet, color: C.primary),
                   label: 'Portfolio'),
             ]));
   }
@@ -394,7 +408,8 @@ class AppHeader extends StatelessWidget {
 
 class BrandTitle extends StatelessWidget {
   final double size;
-  const BrandTitle({super.key, this.size = 24});
+  final bool inverted;
+  const BrandTitle({super.key, this.size = 24, this.inverted = false});
   @override
   Widget build(BuildContext context) => RichText(
           text: TextSpan(
@@ -402,9 +417,11 @@ class BrandTitle extends StatelessWidget {
                   fontSize: size,
                   fontWeight: FontWeight.w900,
                   letterSpacing: .4),
-              children: const [
-            TextSpan(text: 'LION ', style: TextStyle(color: Colors.white)),
-            TextSpan(text: 'BRO', style: TextStyle(color: C.red))
+              children: [
+            TextSpan(
+                text: 'LION ',
+                style: TextStyle(color: inverted ? Colors.white : C.navy)),
+            const TextSpan(text: 'BRO', style: TextStyle(color: C.cyan))
           ]));
 }
 
@@ -1074,22 +1091,19 @@ class PortfolioPage extends StatelessWidget {
         const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: _WhiteInfoCard(children: [
-              _PnlRow('NIFTY 24500 CE', 'Qty 50 • LTP 168.50',
-                  '+₹2,450.00', true),
-              _PnlRow('BANKNIFTY 51200 PE', 'Qty 25 • LTP 155.60',
-                  '-₹1,120.00', false),
-              _PnlRow('RELIANCE', 'Qty 10 • LTP 3,025.00',
-                  '+₹850.00', true)
+              _PnlRow(
+                  'NIFTY 24500 CE', 'Qty 50 • LTP 168.50', '+₹2,450.00', true),
+              _PnlRow('BANKNIFTY 51200 PE', 'Qty 25 • LTP 155.60', '-₹1,120.00',
+                  false),
+              _PnlRow('RELIANCE', 'Qty 10 • LTP 3,025.00', '+₹850.00', true)
             ])),
         const SizedBox(height: 16),
         const _SectionTitle('Holdings'),
         const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: _WhiteInfoCard(children: [
-              _PnlRow('RELIANCE', 'Invested ₹1,20,000', '+₹22,450',
-                  true),
-              _PnlRow(
-                  'HDFCBANK', 'Invested ₹98,500', '+₹16,320', true),
+              _PnlRow('RELIANCE', 'Invested ₹1,20,000', '+₹22,450', true),
+              _PnlRow('HDFCBANK', 'Invested ₹98,500', '+₹16,320', true),
               _PnlRow('TCS', 'Invested ₹75,200', '+₹12,650', true)
             ])),
         const SizedBox(height: 16),
@@ -1205,8 +1219,14 @@ String _sym(dynamic value) {
   return '${_pick(m, const [
             'trading_symbol',
             'tradingSymbol',
-            'symbol',
+            'trdSym',
+            'pTrdSymbol',
+            'p_trd_symbol',
+            'displaySymbol',
+            'display_symbol',
             'displayName',
+            'symbol',
+            'sym',
             'symbol_key'
           ]) ?? '--'}';
 }
@@ -1226,6 +1246,7 @@ class _LiveHomePageState extends State<LiveHomePage> {
   String? err;
   Timer? timer;
   bool busy = false;
+  bool explosionBusy = false;
 
   @override
   void initState() {
@@ -1254,6 +1275,24 @@ class _LiveHomePageState extends State<LiveHomePage> {
       if (mounted) setState(() => err = '$e');
     } finally {
       if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Future<void> _toggleExplosion(bool enabled) async {
+    if (explosionBusy) return;
+    setState(() => explosionBusy = true);
+    try {
+      final r =
+          await widget.api.postJson('/explosion/toggle', {'enabled': enabled});
+      if (!mounted) return;
+      setState(() {
+        b['explosion'] = r;
+        err = null;
+      });
+    } catch (e) {
+      if (mounted) setState(() => err = '$e');
+    } finally {
+      if (mounted) setState(() => explosionBusy = false);
     }
   }
 
@@ -1309,6 +1348,9 @@ class _LiveHomePageState extends State<LiveHomePage> {
     final ps = _m(b['position_summary']);
     final sig = _l(b['signals']);
     final latest = sig.isEmpty ? <String, dynamic>{} : _m(sig.first);
+    final explosion = _m(b['explosion']);
+    final explosionEnabled = explosion['enabled'] == true;
+    final explosionLatest = _l(explosion['latest']);
     final pnlRaw = _pick(ps, const ['day_mtm', 'day_pnl']);
     final pnl = _n(pnlRaw);
     final auth = h['authenticated'] == true;
@@ -1400,7 +1442,8 @@ class _LiveHomePageState extends State<LiveHomePage> {
                       onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (_) => LiveTradePage(api: widget.api)))),
+                              builder: (_) => LiveTradePage(
+                                  api: widget.api, showBack: true)))),
                   _Quick(
                       icon: Icons.table_chart_outlined,
                       label: 'Option Chain',
@@ -1428,6 +1471,22 @@ class _LiveHomePageState extends State<LiveHomePage> {
                 ]),
           ),
           const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: _ExplosionControlCard(
+              enabled: explosionEnabled,
+              busy: explosionBusy,
+              latest: explosionLatest,
+              onChanged: _toggleExplosion,
+              onOpen: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => LiveExplosionPage(api: widget.api),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
           const _SectionTitle('Latest Signal'),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -1447,6 +1506,403 @@ class _LiveHomePageState extends State<LiveHomePage> {
                 child: LinearProgressIndicator(color: C.red)),
           const SizedBox(height: 24),
         ],
+      ),
+    );
+  }
+}
+
+Color _explosionStateColor(String state) {
+  switch (state.toUpperCase()) {
+    case 'EXPLOSION':
+    case 'RE-EXPLOSION':
+      return C.cyan;
+    case 'TRIGGERED':
+      return C.primaryBright;
+    case 'ARMED':
+      return KbColors.amber;
+    case 'COOLDOWN':
+      return C.red;
+    case 'OFF':
+      return C.muted;
+    default:
+      return KbColors.blueGreen;
+  }
+}
+
+class _ExplosionControlCard extends StatelessWidget {
+  const _ExplosionControlCard({
+    required this.enabled,
+    required this.busy,
+    required this.latest,
+    required this.onChanged,
+    required this.onOpen,
+  });
+
+  final bool enabled;
+  final bool busy;
+  final List latest;
+  final ValueChanged<bool> onChanged;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    Map<String, dynamic> hottest = {};
+    for (final row in latest) {
+      final m = _m(row);
+      if ((_n(m['score'])) >= _n(hottest['score'])) hottest = m;
+    }
+    final state = '${hottest['state'] ?? (enabled ? 'WATCH' : 'OFF')}';
+    final score = _n(hottest['score']);
+    final stateColor = _explosionStateColor(state);
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: enabled ? C.cyan.withOpacity(.55) : C.border),
+        boxShadow: const [
+          BoxShadow(
+              color: KbColors.shadow, blurRadius: 20, offset: Offset(0, 7)),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              gradient: KbColors.brandGradient,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: C.cyan.withOpacity(enabled ? .24 : .08),
+                  blurRadius: enabled ? 18 : 8,
+                ),
+              ],
+            ),
+            child:
+                const Icon(Icons.bolt_rounded, color: Colors.white, size: 28),
+          ),
+          const SizedBox(width: 13),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text('EXPLOSION DETECTOR',
+                        style: TextStyle(
+                            color: C.navy,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: .25)),
+                    const SizedBox(width: 8),
+                    if (enabled) _PulseDot(color: stateColor),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  enabled
+                      ? 'Kotak live option momentum • $state${score > 0 ? ' • ${score.toStringAsFixed(0)}/100' : ''}'
+                      : 'Independent alert-only gamma/momentum engine',
+                  style: const TextStyle(color: C.muted, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+          Switch(
+            value: enabled,
+            onChanged: busy ? null : onChanged,
+            activeThumbColor: C.primary,
+            activeTrackColor: C.cyan.withOpacity(.32),
+          ),
+          IconButton(
+            tooltip: 'Open detector',
+            onPressed: onOpen,
+            icon: const Icon(Icons.chevron_right_rounded, color: C.primary),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PulseDot extends StatefulWidget {
+  const _PulseDot({required this.color});
+  final Color color;
+
+  @override
+  State<_PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<_PulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 850),
+    lowerBound: .72,
+    upperBound: 1,
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: controller,
+      child: Container(
+        width: 8,
+        height: 8,
+        decoration: BoxDecoration(
+          color: widget.color,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(color: widget.color.withOpacity(.32), blurRadius: 8)
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class LiveExplosionPage extends StatefulWidget {
+  const LiveExplosionPage({super.key, required this.api});
+  final ApiService api;
+
+  @override
+  State<LiveExplosionPage> createState() => _LiveExplosionPageState();
+}
+
+class _LiveExplosionPageState extends State<LiveExplosionPage> {
+  Map<String, dynamic> status = {};
+  bool busy = false;
+  String? err;
+  Timer? timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+    timer =
+        Timer.periodic(const Duration(seconds: 3), (_) => _load(silent: true));
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (!silent && mounted) setState(() => busy = true);
+    try {
+      final r = await widget.api.getJson('/explosion/status');
+      if (mounted)
+        setState(() {
+          status = r;
+          err = null;
+        });
+    } catch (e) {
+      if (mounted) setState(() => err = '$e');
+    } finally {
+      if (!silent && mounted) setState(() => busy = false);
+    }
+  }
+
+  Future<void> _toggle(bool enabled) async {
+    setState(() => busy = true);
+    try {
+      final r =
+          await widget.api.postJson('/explosion/toggle', {'enabled': enabled});
+      if (mounted)
+        setState(() {
+          status = r;
+          err = null;
+        });
+    } catch (e) {
+      if (mounted) setState(() => err = '$e');
+    } finally {
+      if (mounted) setState(() => busy = false);
+    }
+  }
+
+  Widget _metric(String label, Object? value) {
+    final text = value == null || '$value'.trim().isEmpty ? '--' : '$value';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 9),
+      decoration: BoxDecoration(
+        color: C.panel2,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: C.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: C.muted, fontSize: 10)),
+          const SizedBox(height: 3),
+          Text(text,
+              style:
+                  const TextStyle(color: C.text, fontWeight: FontWeight.w800)),
+        ],
+      ),
+    );
+  }
+
+  Widget _detectorRow(Map<String, dynamic> row) {
+    final state = '${row['state'] ?? 'WATCH'}';
+    final side = '${row['side'] ?? '--'}';
+    final score = _n(row['score']);
+    final option = _m(row['option']);
+    final metrics = _m(row['metrics']);
+    final reasons = _l(row['reason']);
+    final color = _explosionStateColor(state);
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(
+            color: state == 'EXPLOSION' || state == 'RE-EXPLOSION'
+                ? C.cyan.withOpacity(.7)
+                : C.border),
+        boxShadow: const [
+          BoxShadow(
+              color: KbColors.shadow, blurRadius: 16, offset: Offset(0, 5))
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _PulseDot(color: color),
+              const SizedBox(width: 9),
+              Expanded(
+                child: Text('${row['symbol_key'] ?? '--'}',
+                    style: const TextStyle(
+                        color: C.navy,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15)),
+              ),
+              _StatusPill(text: state, color: color),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text('$side • Score ${score.toStringAsFixed(0)}/100',
+              style: TextStyle(
+                  color: side == 'SELL' ? C.red : C.primary,
+                  fontWeight: FontWeight.w900)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _metric('Underlying', row['underlying']),
+              _metric('Premium', option['premium']),
+              _metric('OI', option['oi']),
+              _metric('ΔOI', option['oi_change']),
+              _metric('IV', option['iv']),
+              _metric('Delta', option['delta']),
+              _metric('Gamma', option['gamma']),
+              _metric('Greeks', option['greeks_source']),
+              _metric('VIX', metrics['vix']),
+            ],
+          ),
+          if (option.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text('${option['trading_symbol'] ?? ''}',
+                style: const TextStyle(
+                    color: C.text, fontWeight: FontWeight.w800)),
+          ],
+          if (reasons.isNotEmpty) ...[
+            const SizedBox(height: 9),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: reasons
+                  .take(8)
+                  .map((x) => Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 5),
+                        decoration: BoxDecoration(
+                            color: C.panel2,
+                            borderRadius: BorderRadius.circular(20)),
+                        child: Text('$x',
+                            style: const TextStyle(
+                                color: C.muted,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700)),
+                      ))
+                  .toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = status['enabled'] == true;
+    final rows = _l(status['latest']);
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            AppHeader(title: 'Explosion Detector', back: true, actions: [
+              _StatusPill(
+                  text: enabled ? 'ON' : 'OFF',
+                  color: enabled ? C.green : C.muted),
+              Switch(
+                  value: enabled,
+                  onChanged: busy ? null : _toggle,
+                  activeColor: C.primary),
+              IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
+            ]),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [Color(0xFFEAF4FF), Color(0xFFE9FCFF)]),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: C.cyan.withOpacity(.35)),
+                ),
+                child: const Text(
+                  'ALERT ONLY • Separate from Normal Engine • No automatic order execution. Kotak data only.',
+                  style: TextStyle(
+                      color: C.navy, fontSize: 11, fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+            if (err != null)
+              Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(err!, style: const TextStyle(color: C.red))),
+            if (busy) const LinearProgressIndicator(color: C.cyan),
+            Expanded(
+              child: rows.isEmpty
+                  ? Center(
+                      child: Text(
+                        enabled
+                            ? 'Waiting for closed 1-minute market context…'
+                            : 'Explosion Detector is OFF',
+                        style: const TextStyle(color: C.muted),
+                      ),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                      children: rows.map((x) => _detectorRow(_m(x))).toList(),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1853,15 +2309,28 @@ class _LiveOrdersPageState extends State<LiveOrdersPage> {
   List rows = [];
   String? err;
   bool busy = false;
+  bool _loading = false;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (mounted && !busy) _load(silent: true);
+    });
   }
 
-  Future<void> _load() async {
-    setState(() => busy = true);
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (_loading) return;
+    _loading = true;
+    if (!silent && mounted) setState(() => busy = true);
     try {
       final v = await widget.api.getAny('/orders');
       final list = v is List ? v : _l(_m(v)['data'] ?? _m(v)['orders']);
@@ -1873,7 +2342,8 @@ class _LiveOrdersPageState extends State<LiveOrdersPage> {
     } catch (e) {
       if (mounted) setState(() => err = '$e');
     } finally {
-      if (mounted) setState(() => busy = false);
+      _loading = false;
+      if (!silent && mounted) setState(() => busy = false);
     }
   }
 
@@ -1882,6 +2352,7 @@ class _LiveOrdersPageState extends State<LiveOrdersPage> {
     return Column(
       children: [
         AppHeader(title: 'Orders', actions: [
+          const _StatusPill(text: 'AUTO 5s', color: C.green),
           IconButton(onPressed: _load, icon: const Icon(Icons.refresh))
         ]),
         if (err != null)
@@ -1899,51 +2370,129 @@ class _LiveOrdersPageState extends State<LiveOrdersPage> {
                   itemCount: rows.length,
                   itemBuilder: (context, i) {
                     final m = _m(rows[i]);
-                    final side = '${m['transaction_type'] ?? m['side'] ?? '--'}'
+                    final side = '${_pick(m, const [
+                                  'transaction_type',
+                                  'transactionType',
+                                  'trnsTp',
+                                  'side'
+                                ]) ?? '--'}'
                         .toUpperCase();
                     final buy = side == 'B' || side == 'BUY';
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                          color: C.whiteCard,
-                          borderRadius: BorderRadius.circular(14)),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(_sym(m),
-                                    style: const TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.w900)),
-                                const SizedBox(height: 6),
-                                Row(
+                    final status = '${_pick(m, const [
+                              'order_status',
+                              'orderStatus',
+                              'ordSt',
+                              'status',
+                              'stat'
+                            ]) ?? '--'}';
+                    final avgPrice = _pick(m, const [
+                      'average_price',
+                      'averagePrice',
+                      'avgPrc',
+                    ]);
+                    final submittedPrice = _pick(m, const ['price', 'prc']);
+                    final price = avgPrice != null && _n(avgPrice) > 0
+                        ? avgPrice
+                        : submittedPrice;
+                    final product =
+                        '${_pick(m, const ['product', 'prod']) ?? '--'}';
+                    final orderType = '${_pick(m, const [
+                              'order_type',
+                              'price_type',
+                              'prcTp'
+                            ]) ?? '--'}';
+                    final segment = '${_pick(m, const [
+                              'exchange_segment',
+                              'exchangeSegment',
+                              'exSeg'
+                            ]) ?? '--'}';
+                    final time = '${_pick(m, const [
+                              'order_time',
+                              'orderDateTime',
+                              'ordDtTm',
+                              'exCfmTm'
+                            ]) ?? ''}';
+                    final statusUpper = status.toUpperCase();
+                    final statusColor = statusUpper.contains('REJECT') ||
+                            statusUpper.contains('CANCEL') ||
+                            statusUpper.contains('FAIL')
+                        ? C.red
+                        : statusUpper.contains('COMPLETE') ||
+                                statusUpper.contains('EXECUT') ||
+                                statusUpper.contains('TRADED')
+                            ? C.green
+                            : KbColors.amber;
+                    return Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1100),
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                              color: C.whiteCard,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: C.border)),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    _Tag(buy ? 'BUY' : 'SELL',
-                                        buy ? const Color(0xFF0AA865) : C.red),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                        'Qty ${m['quantity'] ?? m['qty'] ?? '--'}',
+                                    Text(_sym(m),
                                         style: const TextStyle(
-                                            color: Colors.black54)),
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.w900)),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        _Tag(
+                                            buy ? 'BUY' : 'SELL',
+                                            buy
+                                                ? const Color(0xFF0AA865)
+                                                : C.red),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                            'Qty ${_pick(m, const [
+                                                      'quantity',
+                                                      'qty',
+                                                      'ordQty'
+                                                    ]) ?? '--'}',
+                                            style: const TextStyle(
+                                                color: Colors.black54)),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 5),
+                                    Text(status,
+                                        style: TextStyle(
+                                            color: statusColor,
+                                            fontWeight: FontWeight.w700)),
+                                    const SizedBox(height: 4),
+                                    Text('$product • $orderType • $segment',
+                                        style: const TextStyle(
+                                            color: Colors.black45,
+                                            fontSize: 11)),
                                   ],
                                 ),
-                                const SizedBox(height: 5),
-                                Text(
-                                    '${m['status'] ?? m['order_status'] ?? '--'}',
-                                    style: const TextStyle(
-                                        color: Color(0xFF008E5C),
-                                        fontWeight: FontWeight.w700)),
-                              ],
-                            ),
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(price == null ? '--' : '₹$price',
+                                      style: const TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.w900)),
+                                  if (time.isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    Text(time,
+                                        style: const TextStyle(
+                                            color: Colors.black45,
+                                            fontSize: 10)),
+                                  ],
+                                ],
+                              ),
+                            ],
                           ),
-                          Text('${m['price'] ?? m['average_price'] ?? '--'}',
-                              style: const TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w900)),
-                        ],
+                        ),
                       ),
                     );
                   },
@@ -1969,16 +2518,29 @@ class _LivePortfolioPageState extends State<LivePortfolioPage> {
   Map<String, dynamic> summary = {};
   String? err;
   bool busy = false;
+  bool _loading = false;
   int section = 0;
+  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted && !busy) _load(silent: true);
+    });
   }
 
-  Future<void> _load() async {
-    setState(() => busy = true);
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (_loading) return;
+    _loading = true;
+    if (!silent && mounted) setState(() => busy = true);
     try {
       final v = await Future.wait([
         widget.api.getJson('/portfolio/positions/live'),
@@ -1997,7 +2559,8 @@ class _LivePortfolioPageState extends State<LivePortfolioPage> {
     } catch (e) {
       if (mounted) setState(() => err = '$e');
     } finally {
-      if (mounted) setState(() => busy = false);
+      _loading = false;
+      if (!silent && mounted) setState(() => busy = false);
     }
   }
 
@@ -2010,18 +2573,54 @@ class _LivePortfolioPageState extends State<LivePortfolioPage> {
       ];
     return data.take(20).map((x) {
       final m = _m(x);
-      final pnl =
-          _n(m['pnl'] ?? m['mtm'] ?? m['day_mtm'] ?? m['unrealized_pnl']);
-      final ltp = _pick(m, const ['ltp', 'last_traded_price', 'last_price']);
+      final pnlRaw = _pick(m, const [
+        'pnl',
+        'mtm',
+        'day_mtm',
+        'unrealized_pnl',
+      ]);
+      final pnl = _n(pnlRaw);
+      final pnlPctRaw = _pick(m, const ['pnl_pct', 'pnlPct', 'pnl_percentage']);
+      final livePrice = _pick(m, const [
+        'ltp',
+        'last_traded_price',
+        'last_price',
+        'lastPrice',
+        'lastTradedPrice'
+      ]);
+      final closePrice = _pick(m, const [
+        'closingPrice',
+        'closing_price',
+        'closePrice',
+        'close_price',
+        'previousClose',
+        'previous_close'
+      ]);
       final quoteStatus = '${m['quote_status'] ?? ''}';
-      final priceText = ltp == null
+      final effectivePrice = livePrice ?? closePrice;
+      final usingClose = (livePrice == null && closePrice != null) ||
+          quoteStatus == 'PREV_CLOSE';
+      final priceText = effectivePrice == null
           ? '--'
-          : '${_n(ltp).toStringAsFixed(2)}${quoteStatus == 'PREV_CLOSE' ? ' PREV CLOSE' : ''}';
-      final sub = holding
-          ? 'Qty ${m['quantity'] ?? m['qty'] ?? '--'} • LTP $priceText'
-          : 'Qty ${m['net_quantity'] ?? m['quantity'] ?? '--'} • LTP $priceText';
-      return _PnlRow(_sym(m), sub,
-          pnl == 0 ? '--' : '${pnl >= 0 ? '+' : ''}${_money(pnl)}', pnl >= 0);
+          : '${_n(effectivePrice).toStringAsFixed(2)}${usingClose ? ' PREV CLOSE' : ''}';
+      final avgRaw = _pick(m, const [
+        'average_price',
+        'averagePrice',
+        'avg_price',
+        'avgPrc',
+      ]);
+      final qty = holding
+          ? (m['quantity'] ?? m['qty'] ?? '--')
+          : (m['net_quantity'] ?? m['quantity'] ?? '--');
+      final avgText = avgRaw == null ? '--' : _n(avgRaw).toStringAsFixed(2);
+      final sub = 'Qty $qty • Avg $avgText • LTP $priceText';
+      final pctText = pnlPctRaw == null
+          ? ''
+          : ' (${_n(pnlPctRaw) >= 0 ? '+' : ''}${_n(pnlPctRaw).toStringAsFixed(2)}%)';
+      final pnlText = pnlRaw == null
+          ? '--'
+          : '${pnl >= 0 ? '+' : ''}${_money(pnl)}$pctText';
+      return _PnlRow(_sym(m), sub, pnlText, pnl >= 0);
     }).toList();
   }
 
@@ -2044,55 +2643,73 @@ class _LivePortfolioPageState extends State<LivePortfolioPage> {
       'availableCash',
       'available_margin',
       'availableMargin',
-      'net',
       'cash',
-      'net_cash'
+      'net_cash',
+      'Net',
+      'net'
     ]);
     final used = _deepPick(limits, const [
       'used_margin',
       'utilized_margin',
       'utilised_margin',
       'margin_used',
-      'usedMargin'
+      'usedMargin',
+      'MarginUsed',
+      'MarginUsedPrsnt',
+      'AmountUtilizedPrsnt',
+      'AmtUntilizedPrsnt'
     ]);
-    final collateral = _deepPick(
-        limits, const ['collateral', 'collateral_value', 'collateralValue']);
-    final exposure = _deepPick(
-        limits, const ['exposure', 'exposure_margin', 'exposureMargin']);
-    final total = _deepPick(limits, const [
-      'total_limit',
-      'totalLimit',
-      'total_margin',
-      'totalMargin',
-      'net'
+    final collateral = _deepPick(limits, const [
+      'collateral',
+      'collateral_value',
+      'collateralValue',
+      'Collateral',
+      'CollateralValue',
+      'RmsCollateral'
     ]);
+    final exposure = _deepPick(limits, const [
+      'exposure',
+      'exposure_margin',
+      'exposureMargin',
+      'ExposureMarginPrsnt'
+    ]);
+    final total = _deepPick(limits,
+        const ['total_limit', 'totalLimit', 'total_margin', 'totalMargin']);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-            color: C.whiteCard, borderRadius: BorderRadius.circular(16)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Funds & Margin',
-              style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900)),
-          const SizedBox(height: 12),
-          _fundRow('Available Cash / Margin', available),
-          const Divider(),
-          _fundRow('Used Margin', used),
-          const Divider(),
-          _fundRow('Collateral', collateral),
-          const Divider(),
-          _fundRow('Exposure', exposure),
-          const Divider(),
-          _fundRow('Total Limit', total),
-          const SizedBox(height: 8),
-          const Text(
-              'Values are shown only when supplied by the connected broker API.',
-              style: TextStyle(color: Colors.black45, fontSize: 11)),
-        ]),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1100),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+                color: C.whiteCard,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: C.border)),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('Funds & Margin',
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900)),
+              const SizedBox(height: 12),
+              _fundRow('Available Cash / Margin', available),
+              const Divider(),
+              _fundRow('Used Margin', used),
+              const Divider(),
+              _fundRow('Collateral', collateral),
+              const Divider(),
+              _fundRow('Exposure', exposure),
+              const Divider(),
+              _fundRow('Total Limit', total),
+              const SizedBox(height: 8),
+              const Text(
+                  'Values are shown only when supplied by the connected broker API.',
+                  style: TextStyle(color: Colors.black45, fontSize: 11)),
+            ]),
+          ),
+        ),
       ),
     );
   }
@@ -2104,11 +2721,21 @@ class _LivePortfolioPageState extends State<LivePortfolioPage> {
     if (section == 0) {
       content = Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _WhiteInfoCard(children: _rows(positions, false)));
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1100),
+              child: _WhiteInfoCard(children: _rows(positions, false)),
+            ),
+          ));
     } else if (section == 1) {
       content = Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: _WhiteInfoCard(children: _rows(holdings, true)));
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1100),
+              child: _WhiteInfoCard(children: _rows(holdings, true)),
+            ),
+          ));
     } else {
       content = _funds();
     }
@@ -2116,6 +2743,7 @@ class _LivePortfolioPageState extends State<LivePortfolioPage> {
       onRefresh: _load,
       child: ListView(padding: EdgeInsets.zero, children: [
         AppHeader(title: 'Portfolio', actions: [
+          const _StatusPill(text: 'AUTO 10s', color: C.green),
           IconButton(onPressed: _load, icon: const Icon(Icons.refresh))
         ]),
         if (err != null)
@@ -2133,7 +2761,12 @@ class _LivePortfolioPageState extends State<LivePortfolioPage> {
                         child: ChoiceChip(
                             label: Text(titles[i]),
                             selected: section == i,
-                            selectedColor: C.red,
+                            selectedColor: C.primary,
+                            labelStyle: TextStyle(
+                                color: section == i ? Colors.white : C.text,
+                                fontWeight: FontWeight.w800),
+                            side: BorderSide(
+                                color: section == i ? C.primary : C.border),
                             onSelected: (_) => setState(() => section = i)),
                       ))),
         ),
@@ -2153,6 +2786,7 @@ class LiveTradePage extends StatefulWidget {
     this.initialPrice,
     this.initialSegment = 'nse_fo',
     this.initialBuy = true,
+    this.showBack = false,
   });
 
   final ApiService api;
@@ -2160,6 +2794,7 @@ class LiveTradePage extends StatefulWidget {
   final double? initialPrice;
   final String initialSegment;
   final bool initialBuy;
+  final bool showBack;
 
   @override
   State<LiveTradePage> createState() => _LiveTradePageState();
@@ -2269,116 +2904,222 @@ class _LiveTradePageState extends State<LiveTradePage> {
 
   @override
   Widget build(BuildContext context) {
+    final success = msg?.startsWith('Order submitted') == true;
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        const SizedBox(height: 6),
-        const AppHeader(title: 'Manual Trade'),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            children: [
-              Expanded(
-                  child: ChoiceChip(
-                      label: const Text('BUY'),
-                      selected: buy,
-                      selectedColor: C.red,
-                      onSelected: (_) => setState(() => buy = true))),
-              const SizedBox(width: 8),
-              Expanded(
-                  child: ChoiceChip(
-                      label: const Text('SELL'),
-                      selected: !buy,
-                      selectedColor: C.green,
-                      onSelected: (_) => setState(() => buy = false))),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        _TradeText(
-            controller: symbolController,
-            label: 'Trading Symbol',
-            hint: 'Example: NIFTY26SEP24500CE'),
-        _TradeText(
-            controller: priceController,
-            label: 'Live / Reference Price',
-            hint: '126.40',
-            number: true),
-        _TradeText(
-            controller: quantityController,
-            label: 'Quantity',
-            hint: '50',
-            number: true),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: ['nse_fo', 'nse_cm', 'bse_fo', 'MCX']
-                .map((x) => ChoiceChip(
-                    label: Text(x),
-                    selected: segment == x,
-                    onSelected: (_) => setState(() => segment = x)))
-                .toList(),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Wrap(
-            spacing: 8,
-            children: ['MIS', 'NRML', 'CNC']
-                .map((x) => ChoiceChip(
-                    label: Text(x),
-                    selected: product == x,
-                    onSelected: (_) => setState(() => product = x)))
-                .toList(),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Wrap(
-            spacing: 8,
-            children: ['MKT', 'L', 'SL', 'SL-M']
-                .map((x) => ChoiceChip(
-                    label: Text(x),
-                    selected: orderType == x,
-                    onSelected: (_) => setState(() => orderType = x)))
-                .toList(),
-          ),
-        ),
-        if (msg != null)
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(msg!,
-                style: TextStyle(
-                    color:
-                        msg!.startsWith('Order submitted') ? C.green : C.red)),
-          ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: SizedBox(
-            height: 56,
-            child: FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: buy ? C.red : C.green),
-              onPressed: busy ? null : _prepare,
-              child: busy
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : Text('Prepare ${buy ? 'BUY' : 'SELL'} Order',
-                      style: const TextStyle(fontWeight: FontWeight.w900)),
+        AppHeader(title: 'Manual Trade', back: widget.showBack),
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 860),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 2, 16, 28),
+              child: Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: C.panel,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: C.border),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0A000000),
+                      blurRadius: 18,
+                      offset: Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Center(child: Text('BUY')),
+                            selected: buy,
+                            selectedColor: C.green,
+                            labelStyle: TextStyle(
+                                color: buy ? Colors.white : C.text,
+                                fontWeight: FontWeight.w800),
+                            side: BorderSide(color: buy ? C.green : C.border),
+                            onSelected: (_) => setState(() => buy = true),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Center(child: Text('SELL')),
+                            selected: !buy,
+                            selectedColor: C.red,
+                            labelStyle: TextStyle(
+                                color: !buy ? Colors.white : C.text,
+                                fontWeight: FontWeight.w800),
+                            side: BorderSide(color: !buy ? C.red : C.border),
+                            onSelected: (_) => setState(() => buy = false),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    _TradeText(
+                      controller: symbolController,
+                      label: 'Trading Symbol',
+                      hint: 'Example: NIFTY26SEP24500CE',
+                      compact: true,
+                    ),
+                    _TradeText(
+                      controller: priceController,
+                      label: 'Live / Reference Price',
+                      hint: '126.40',
+                      number: true,
+                      compact: true,
+                    ),
+                    _TradeText(
+                      controller: quantityController,
+                      label: 'Quantity',
+                      hint: '50',
+                      number: true,
+                      compact: true,
+                    ),
+                    const SizedBox(height: 2),
+                    const Text('Exchange',
+                        style: TextStyle(
+                            color: C.muted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: ['nse_fo', 'nse_cm', 'bse_fo', 'mcx_fo']
+                          .map((x) => ChoiceChip(
+                              label: Text(x.toUpperCase()),
+                              selected: segment == x,
+                              selectedColor: C.primary,
+                              labelStyle: TextStyle(
+                                  color: segment == x ? Colors.white : C.text,
+                                  fontWeight: FontWeight.w700),
+                              side: BorderSide(
+                                  color: segment == x ? C.primary : C.border),
+                              onSelected: (_) => setState(() => segment = x)))
+                          .toList(),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text('Product',
+                        style: TextStyle(
+                            color: C.muted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: ['MIS', 'NRML', 'CNC']
+                          .map((x) => ChoiceChip(
+                              label: Text(x),
+                              selected: product == x,
+                              selectedColor: C.primary,
+                              labelStyle: TextStyle(
+                                  color: product == x ? Colors.white : C.text,
+                                  fontWeight: FontWeight.w700),
+                              side: BorderSide(
+                                  color: product == x ? C.primary : C.border),
+                              onSelected: (_) => setState(() => product = x)))
+                          .toList(),
+                    ),
+                    const SizedBox(height: 14),
+                    const Text('Order type',
+                        style: TextStyle(
+                            color: C.muted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: ['MKT', 'L', 'SL', 'SL-M']
+                          .map((x) => ChoiceChip(
+                              label: Text(x),
+                              selected: orderType == x,
+                              selectedColor: C.primary,
+                              labelStyle: TextStyle(
+                                  color: orderType == x ? Colors.white : C.text,
+                                  fontWeight: FontWeight.w700),
+                              side: BorderSide(
+                                  color: orderType == x ? C.primary : C.border),
+                              onSelected: (_) => setState(() => orderType = x)))
+                          .toList(),
+                    ),
+                    if (msg != null) ...[
+                      const SizedBox(height: 14),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: (success ? C.green : C.red).withOpacity(.07),
+                          borderRadius: BorderRadius.circular(9),
+                          border: Border.all(
+                              color:
+                                  (success ? C.green : C.red).withOpacity(.28)),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              success
+                                  ? Icons.check_circle_outline
+                                  : Icons.info_outline,
+                              size: 18,
+                              color: success ? C.green : C.red,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                msg!,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  height: 1.35,
+                                  fontWeight: FontWeight.w600,
+                                  color: success ? C.green : C.red,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 18),
+                    SizedBox(
+                      height: 50,
+                      child: FilledButton(
+                        style: FilledButton.styleFrom(
+                            backgroundColor: buy ? C.green : C.red),
+                        onPressed: busy ? null : _prepare,
+                        child: busy
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white))
+                            : Text('Prepare ${buy ? 'BUY' : 'SELL'} Order',
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.w900)),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Orders use the protected execution-intent flow and require explicit final confirmation before broker submission.',
+                      style: TextStyle(
+                          color: C.muted, fontSize: 10.5, height: 1.35),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'Safety: direct /orders/place is disabled by backend. This app uses execution intent → explicit confirmation only.',
-            style: TextStyle(color: C.muted, fontSize: 11),
-          ),
-        ),
-        const SizedBox(height: 24),
       ],
     );
   }
@@ -2389,16 +3130,20 @@ class _TradeText extends StatelessWidget {
       {required this.controller,
       required this.label,
       required this.hint,
-      this.number = false});
+      this.number = false,
+      this.compact = false});
   final TextEditingController controller;
   final String label;
   final String hint;
   final bool number;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      padding: compact
+          ? const EdgeInsets.only(bottom: 12)
+          : const EdgeInsets.fromLTRB(16, 0, 16, 14),
       child: TextField(
         controller: controller,
         keyboardType: number
@@ -2425,47 +3170,71 @@ class LiveOptionPage extends StatefulWidget {
 }
 
 class _LiveOptionPageState extends State<LiveOptionPage> {
+  String indexKey = 'nse_cm|Nifty 50';
   List rows = [];
+  Map<String, dynamic> chain = {};
   String? err;
+  bool busy = false;
+  bool _loading = false;
+  Timer? timer;
+
+  static const indices = <String, String>{
+    'NIFTY': 'nse_cm|Nifty 50',
+    'BANKNIFTY': 'nse_cm|Nifty Bank',
+    'SENSEX': 'bse_cm|Sensex',
+  };
 
   @override
   void initState() {
     super.initState();
     _load();
+    timer =
+        Timer.periodic(const Duration(seconds: 15), (_) => _load(silent: true));
   }
 
-  Future<void> _load() async {
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (_loading) return;
+    _loading = true;
+    if (!silent && mounted) setState(() => busy = true);
     try {
-      final v = await widget.api.getAny('/signals/lifecycle?limit=100');
-      final all = _l(v);
+      final r = await widget.api.postJson(
+          '/options/chain/index',
+          {
+            'symbol_key': indexKey,
+            'strikes_each_side': 2,
+          },
+          timeout: const Duration(seconds: 20));
       if (!mounted) return;
       setState(() {
-        rows = all.where((x) {
-          final m = _m(x);
-          final symbol = '${m['trading_symbol'] ?? ''}'.toUpperCase();
-          return m['option_type'] != null ||
-              symbol.contains('CE') ||
-              symbol.contains('PE');
-        }).toList();
-        err = null;
+        chain = r;
+        rows = _l(r['rows']);
+        err = r['status'] == 'READY'
+            ? null
+            : '${r['reason'] ?? 'Option chain unavailable'}';
       });
     } catch (e) {
       if (mounted) setState(() => err = '$e');
+    } finally {
+      _loading = false;
+      if (!silent && mounted) setState(() => busy = false);
     }
   }
 
   String _segmentFor(Map m) {
     final direct = '${m['exchange_segment'] ?? m['segment'] ?? ''}'.trim();
     if (direct.isNotEmpty) return direct;
-    final u =
-        '${m['underlying_symbol'] ?? m['symbol'] ?? m['trading_symbol'] ?? ''}'
-            .toUpperCase();
-    return u.contains('SENSEX') ? 'bse_fo' : 'nse_fo';
+    return indexKey.contains('Sensex') ? 'bse_fo' : 'nse_fo';
   }
 
   double _priceFor(Map m) => _n(
-        m['option_ltp'] ??
-            m['ltp'] ??
+        m['ltp'] ??
+            m['option_ltp'] ??
             m['last_traded_price'] ??
             m['last_price'] ??
             m['price'],
@@ -2477,8 +3246,7 @@ class _LiveOptionPageState extends State<LiveOptionPage> {
     if (symbol.isEmpty || price <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text(
-                'Tradable symbol or genuine live premium is not available yet.')),
+            content: Text('Genuine live premium is not available yet.')),
       );
       return;
     }
@@ -2493,6 +3261,7 @@ class _LiveOptionPageState extends State<LiveOptionPage> {
               initialPrice: price,
               initialSegment: _segmentFor(m),
               initialBuy: buy,
+              showBack: true,
             ),
           ),
         ),
@@ -2512,8 +3281,129 @@ class _LiveOptionPageState extends State<LiveOptionPage> {
     );
   }
 
+  Widget _contractCell(Map<String, dynamic>? m, String type) {
+    if (m == null) {
+      return const Expanded(
+        child: Padding(
+          padding: EdgeInsets.all(12),
+          child: Center(child: Text('--', style: TextStyle(color: C.muted))),
+        ),
+      );
+    }
+    final ltp = _priceFor(m);
+    return Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _openContract(m),
+        child: Container(
+          padding: const EdgeInsets.all(11),
+          decoration: BoxDecoration(
+            color: type == 'CE'
+                ? const Color(0xFFF1FBF8)
+                : const Color(0xFFFFF4F5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+                color: type == 'CE'
+                    ? C.green.withOpacity(.25)
+                    : C.red.withOpacity(.24)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                _StatusPill(text: type, color: type == 'CE' ? C.green : C.red),
+                const Spacer(),
+                Icon(Icons.chevron_right_rounded,
+                    size: 17, color: type == 'CE' ? C.green : C.red),
+              ]),
+              const SizedBox(height: 7),
+              Text(ltp > 0 ? '₹${ltp.toStringAsFixed(2)}' : '--',
+                  style: const TextStyle(
+                      color: C.text,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w900)),
+              const SizedBox(height: 5),
+              Text('OI ${m['oi'] ?? '--'} • IV ${m['iv'] ?? '--'}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: C.muted, fontSize: 10)),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: type == 'CE' ? C.green : C.red,
+                    minimumSize: const Size(0, 34),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                  onPressed: ltp > 0 ? () => _openTrade(m, buy: true) : null,
+                  child: const Text('BUY',
+                      style:
+                          TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _chainRows() {
+    final grouped = <double, Map<String, Map<String, dynamic>>>{};
+    for (final raw in rows) {
+      final m = _m(raw);
+      final strike = _n(m['strike']);
+      if (strike <= 0) continue;
+      final typ = '${m['option_type'] ?? ''}'.toUpperCase();
+      if (typ != 'CE' && typ != 'PE') continue;
+      grouped.putIfAbsent(strike, () => <String, Map<String, dynamic>>{})[typ] =
+          m;
+    }
+    final strikes = grouped.keys.toList()..sort();
+    return strikes.map((strike) {
+      final pair = grouped[strike]!;
+      final atm = _n(chain['atm']);
+      final isAtm = (strike - atm).abs() < .01;
+      return Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+              color: isAtm ? C.cyan : C.border, width: isAtm ? 1.4 : 1),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _contractCell(pair['CE'], 'CE'),
+            Container(
+              width: 82,
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (isAtm) const _StatusPill(text: 'ATM', color: C.cyan),
+                  if (isAtm) const SizedBox(height: 5),
+                  Text(strike.toStringAsFixed(0),
+                      style: const TextStyle(
+                          color: C.navy,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 15)),
+                ],
+              ),
+            ),
+            _contractCell(pair['PE'], 'PE'),
+          ],
+        ),
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final underlying = _n(chain['underlying_ltp']);
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -2522,159 +3412,80 @@ class _LiveOptionPageState extends State<LiveOptionPage> {
               title: 'Option Chain',
               back: true,
               actions: [
-                IconButton(onPressed: _load, icon: const Icon(Icons.refresh))
+                const _StatusPill(text: 'KOTAK LIVE', color: C.green),
+                IconButton(onPressed: _load, icon: const Icon(Icons.refresh)),
               ],
             ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Row(children: [
-                Icon(Icons.verified_outlined, color: C.green, size: 18),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Resolved broker contracts — tap a contract or use BUY / SELL',
-                    style: TextStyle(color: C.muted, fontSize: 12),
-                  ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: indices.entries.map((e) {
+                  final selected = indexKey == e.value;
+                  return ChoiceChip(
+                    label: Text(e.key),
+                    selected: selected,
+                    selectedColor: C.primary,
+                    labelStyle: TextStyle(
+                      color: selected ? Colors.white : C.text,
+                      fontWeight: FontWeight.w800,
+                    ),
+                    side: BorderSide(color: selected ? C.primary : C.border),
+                    onSelected: (_) {
+                      setState(() {
+                        indexKey = e.value;
+                        rows = [];
+                        chain = {};
+                        err = null;
+                      });
+                      _load();
+                    },
+                  );
+                }).toList(),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Container(
+                width: double.infinity,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [Color(0xFFEAF4FF), Color(0xFFE9FCFF)]),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: C.cyan.withOpacity(.30)),
                 ),
-              ]),
+                child: Text(
+                  '${chain['underlying'] ?? indices.entries.firstWhere((x) => x.value == indexKey).key}  '
+                  '${underlying > 0 ? underlying.toStringAsFixed(2) : '--'}  •  Expiry ${chain['expiry'] ?? '--'}  •  Auto refresh 15s',
+                  style: const TextStyle(
+                      color: C.navy, fontWeight: FontWeight.w800, fontSize: 11),
+                ),
+              ),
             ),
             if (err != null)
               Padding(
-                padding: const EdgeInsets.all(10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 child: Text(err!, style: const TextStyle(color: C.red)),
               ),
+            if (busy) const LinearProgressIndicator(color: C.cyan),
             Expanded(
               child: rows.isEmpty
                   ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(28),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.table_chart_outlined,
-                                color: C.muted, size: 42),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'No tradable option contract is resolved yet.',
-                              style: TextStyle(
-                                  color: C.text, fontWeight: FontWeight.w800),
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'Only genuine broker-resolved CE/PE contracts with a live premium are shown here.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(color: C.muted),
-                            ),
-                            const SizedBox(height: 16),
-                            OutlinedButton.icon(
-                              onPressed: _load,
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Refresh'),
-                            ),
-                          ],
-                        ),
-                      ),
+                      child: Text(
+                          busy
+                              ? 'Loading live option premiums…'
+                              : 'No broker option-chain rows available.',
+                          style: const TextStyle(color: C.muted)),
                     )
                   : RefreshIndicator(
                       onRefresh: _load,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: rows.length,
-                        itemBuilder: (c, i) {
-                          final m = _m(rows[i]);
-                          final symbol = '${m['trading_symbol'] ?? '--'}';
-                          final ltp = _priceFor(m);
-                          final optionType =
-                              '${m['option_type'] ?? (symbol.toUpperCase().contains('PE') ? 'PE' : 'CE')}';
-                          final tradeReady = m['trade_ready'] == true ||
-                              (symbol != '--' && ltp > 0);
-                          return InkWell(
-                            onTap: () => _openContract(m),
-                            borderRadius: BorderRadius.circular(14),
-                            child: Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(14),
-                              decoration: BoxDecoration(
-                                color: C.panel,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                    color: tradeReady
-                                        ? const Color(0x5536D399)
-                                        : C.border),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          symbol,
-                                          style: const TextStyle(
-                                              fontWeight: FontWeight.w900,
-                                              fontSize: 16),
-                                        ),
-                                      ),
-                                      _StatusPill(
-                                        text: optionType,
-                                        color: optionType == 'PE'
-                                            ? C.red
-                                            : C.green,
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 9),
-                                  Wrap(
-                                    spacing: 14,
-                                    runSpacing: 8,
-                                    children: [
-                                      Text(
-                                          'LTP ${ltp > 0 ? ltp.toStringAsFixed(2) : '--'}'),
-                                      Text(
-                                          'OI ${m['option_oi'] ?? m['oi'] ?? '--'}'),
-                                      Text(
-                                          'IV ${m['option_iv'] ?? m['iv'] ?? '--'}'),
-                                      Text(
-                                          'Δ ${m['option_delta'] ?? m['delta'] ?? '--'}'),
-                                      Text('Expiry ${m['expiry'] ?? '--'}'),
-                                      Text('Strike ${m['strike'] ?? '--'}'),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: FilledButton.icon(
-                                          style: FilledButton.styleFrom(
-                                              backgroundColor: C.green),
-                                          onPressed: tradeReady
-                                              ? () => _openTrade(m, buy: true)
-                                              : null,
-                                          icon: const Icon(Icons.arrow_upward,
-                                              size: 17),
-                                          label: const Text('BUY'),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 10),
-                                      Expanded(
-                                        child: FilledButton.icon(
-                                          style: FilledButton.styleFrom(
-                                              backgroundColor: C.red),
-                                          onPressed: tradeReady
-                                              ? () => _openTrade(m, buy: false)
-                                              : null,
-                                          icon: const Icon(Icons.arrow_downward,
-                                              size: 17),
-                                          label: const Text('SELL'),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                        children: _chainRows(),
                       ),
                     ),
             ),
@@ -2733,6 +3544,7 @@ class OptionContractPage extends StatelessWidget {
               initialPrice: _ltp,
               initialSegment: _segment,
               initialBuy: buy,
+              showBack: true,
             ),
           ),
         ),
@@ -2802,7 +3614,11 @@ class OptionContractPage extends StatelessWidget {
                       _metric('IV', contract['option_iv'] ?? contract['iv']),
                       _metric('Delta',
                           contract['option_delta'] ?? contract['delta']),
-                      _metric('Liquidity', contract['liquidity_score']),
+                      _metric('Gamma',
+                          contract['option_gamma'] ?? contract['gamma']),
+                      _metric('Greeks source', contract['greeks_source']),
+                      _metric('Quality',
+                          contract['quality_score'] ?? contract['score']),
                     ],
                   ),
                   const SizedBox(height: 18),
@@ -3223,8 +4039,17 @@ class _WhiteInfoCard extends StatelessWidget {
   Widget build(BuildContext context) => Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-          color: C.whiteCard, borderRadius: BorderRadius.circular(16)),
-      child: Column(children: children));
+          color: C.whiteCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: C.border)),
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i != children.length - 1) const Divider(height: 1),
+          ]
+        ],
+      ));
 }
 
 class _PnlRow extends StatelessWidget {

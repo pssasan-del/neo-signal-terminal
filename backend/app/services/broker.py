@@ -10,6 +10,7 @@ from app.services.risk import risk_engine
 from app.services.positions import position_manager
 from app.services.journal import journal
 from app.services.signal_engine import signal_engine
+from app.services.explosion_detector import explosion_detector
 
 class BrokerService:
     def __init__(self) -> None:
@@ -122,6 +123,64 @@ class BrokerService:
                                 closed = candles.ingest(key, price, int(event_ts), int(day_volume) if day_volume is not None else None)
                                 for candle in closed:
                                     await self._broadcast({"channel": "candle", "data": candle.to_dict()})
+
+                                    # EXPLOSION DETECTOR is independent from the normal strategy. It is
+                                    # alert/data-capture only and never submits an order. Evaluate only
+                                    # on CLOSED 1M candles for the three core indices.
+                                    if candle.timeframe_sec == 60 and key in self.core_signal_keys and explosion_detector.enabled:
+                                        try:
+                                            vix_price = None
+                                            for vkey, vtick in self.latest_ticks.items():
+                                                if "VIX" not in str(vkey).upper() or not isinstance(vtick, dict):
+                                                    continue
+                                                raw_vix = vtick.get("last_traded_price") or vtick.get("ltp") or vtick.get("lastPrice")
+                                                try:
+                                                    if raw_vix is not None and float(raw_vix) > 0:
+                                                        vix_price = float(raw_vix)
+                                                        break
+                                                except (TypeError, ValueError):
+                                                    pass
+
+                                            base = explosion_detector.evaluate_underlying(
+                                                key,
+                                                candles.get_history(key, 60, 120)[:-1],
+                                                candles.get_history(key, 300, 80)[:-1],
+                                                candles.get_history(key, 900, 60)[:-1],
+                                                vix=vix_price,
+                                            )
+                                            final = base
+                                            if int(base.get("score") or 0) >= 35 and base.get("side") in {"BUY", "SELL"}:
+                                                from app.services.instruments import instruments
+                                                opt = await instruments.auto_select_index_option(
+                                                    symbol_key=key,
+                                                    side=str(base["side"]),
+                                                    underlying_ltp=price,
+                                                )
+                                                final = explosion_detector.finalize_with_option(base, opt)
+                                                selected = opt.get("selected") if isinstance(opt, dict) else None
+                                                if isinstance(selected, dict) and selected.get("instrument_token"):
+                                                    try:
+                                                        await self.subscribe(
+                                                            str(selected.get("exchange_segment") or "nse_fo"),
+                                                            str(selected["instrument_token"]),
+                                                            "scrip",
+                                                        )
+                                                    except Exception:
+                                                        pass
+                                            else:
+                                                final = explosion_detector.record_base(base)
+                                            await self._broadcast({
+                                                "channel": "explosion",
+                                                "symbol_key": key,
+                                                "data": final,
+                                            })
+                                        except Exception as exc:
+                                            await self._broadcast({
+                                                "channel": "explosion",
+                                                "symbol_key": key,
+                                                "event": "detector_error",
+                                                "error": str(exc),
+                                            })
 
                                     # Auto-evaluate strict strategy on each CLOSED 5M candle.
                                     # Core indices are always eligible; stocks only when their selected 45-stock group is active.
@@ -448,7 +507,7 @@ class BrokerService:
             segment=str(pick(rec,'exchange_segment','exchangeSegment','segment','pExchSeg') or 'nse_cm')
             segkey=segment.strip().lower().replace('-','_')
             segment={'nse':'nse_cm','nsecm':'nse_cm','nse_cm':'nse_cm','bse':'bse_cm','bsecm':'bse_cm','bse_cm':'bse_cm'}.get(segkey,segment)
-            ltp=num(pick(rec,'ltp','last_traded_price','lastPrice','closing_price','closePrice'))
+            ltp=num(pick(rec,'ltp','last_traded_price','lastPrice','last_price','lastTradedPrice'))
             quote_error=None
             quote_source='HOLDING' if ltp is not None and ltp > 0 else None
             # Holdings responses are not consistent across Neo SDK versions. If token is absent,
@@ -483,7 +542,7 @@ class BrokerService:
                     quote_error=(quote_error+'; ' if quote_error else '')+str(exc)
             # Last-resort display value: broker-provided close is marked explicitly, never called LIVE.
             if ltp is None or ltp <= 0:
-                close=num(pick(rec,'closing_price','closePrice','close_price','previous_close','previousClose'))
+                close=num(pick(rec,'closingPrice','closing_price','closePrice','close_price','previous_close','previousClose'))
                 if close is not None and close > 0:
                     ltp=close; quote_source='PREV_CLOSE' 
             invested=(qty*avg) if avg is not None and qty else None

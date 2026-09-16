@@ -67,6 +67,10 @@ class OptionScanRequest(BaseModel):
     strikes_each_side: int = Field(default=2, ge=0, le=10)
     exchange_segment: str = "nse_fo"
 
+class IndexOptionChainRequest(BaseModel):
+    symbol_key: str
+    strikes_each_side: int = Field(default=2, ge=1, le=5)
+
 class OptionRankRequest(BaseModel):
     underlying_ltp: float = Field(gt=0)
     option_type: Literal["CE", "PE"]

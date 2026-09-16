@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Requ
 from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.models.schemas import (LoginRequest, Subscription, OrderRequest, InstrumentSearchRequest, OptionResolveRequest,
-    SignalEvalRequest, RiskCheckRequest, TradingToggle, OptionScanRequest, OptionRankRequest,
+    SignalEvalRequest, RiskCheckRequest, TradingToggle, OptionScanRequest, OptionRankRequest, IndexOptionChainRequest,
     LifecycleCreateRequest, LifecyclePriceRequest, ExecutionArmRequest, ExecutionIntentRequest, ExecutionConfirmRequest, OrderCancelRequest, OrderModifyRequest, PositionExitRequest, ExitPlanRequest, ExitAllConfirmRequest, ScannerStartRequest)
 from app.services.broker import broker
 from app.services.market_pipeline import candles
@@ -18,6 +18,7 @@ from app.services.positions import position_manager
 from app.services.journal import journal
 from app.services.recovery import recovery_store
 from app.services.scanner import scanner_controller
+from app.services.explosion_detector import explosion_detector
 
 app = FastAPI(title="NEO Signal Terminal API", version="1.0.0")
 
@@ -85,6 +86,7 @@ async def app_bootstrap():
         "latest_ticks": broker.latest_ticks,
         "indices": instruments.index_snapshot(),
         "scanner": scanner_controller.status(),
+        "explosion": explosion_detector.status(),
         "journal": journal.list(20),
         "recovery": {"instrument_registry": instruments.registry_snapshot(), "execution_rearmed": False},
         "server_time": time.time(),
@@ -234,6 +236,29 @@ async def market_indices():
 async def market_candle_storage(timeframe_sec: int = 300):
     return candles.storage_summary(timeframe_sec)
 
+@app.get("/explosion/status")
+async def explosion_status():
+    return explosion_detector.status()
+
+
+@app.post("/explosion/toggle")
+async def explosion_toggle(body: TradingToggle):
+    status = explosion_detector.set_enabled(body.enabled)
+    market_sync = None
+    if body.enabled and broker.authenticated:
+        try:
+            market_sync = await instruments.sync_core_indices()
+        except Exception as exc:
+            market_sync = {"ok": False, "reason": str(exc)}
+    journal.add("explosion", "toggle", {"enabled": body.enabled, "market_sync": market_sync})
+    return {**status, "market_sync": market_sync}
+
+
+@app.get("/explosion/history")
+async def explosion_history(limit: int = 100, symbol_key: str | None = None):
+    return {"enabled": explosion_detector.enabled, "items": explosion_detector.history(limit=limit, symbol_key=symbol_key)}
+
+
 @app.get("/scanner/groups")
 async def scanner_groups():
     return scanner_controller.groups()
@@ -269,6 +294,13 @@ async def scan_options(body: OptionScanRequest):
 async def rank_options(body: OptionRankRequest):
     return {"candidates": option_selector.rank(body.records, underlying_ltp=body.underlying_ltp,
         option_type=body.option_type, fallback_segment=body.exchange_segment)}
+
+@app.post("/options/chain/index")
+async def index_option_chain(body: IndexOptionChainRequest):
+    if not broker.authenticated:
+        raise HTTPException(401, "Login required")
+    return await instruments.index_option_chain(**body.model_dump())
+
 
 @app.post("/signals/lifecycle")
 async def create_lifecycle(body: LifecycleCreateRequest):
