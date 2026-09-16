@@ -12,6 +12,18 @@ class Settings(BaseSettings):
     app_api_token: str = ""
     live_order_submission_enabled: bool = True
     live_order_ack: str = LIVE_ORDER_ACK_PHRASE
+
+    # Telegram is optional. When configured, all normal-strategy signals and
+    # Explosion Detector trigger states are delivered to this one private chat/group.
+    telegram_enabled: bool = True
+    telegram_bot_token: str = ""
+    telegram_chat_id: str = ""
+
+    # Keep the in-memory Kotak session warm while the backend remains running.
+    # This does not bypass Kotak's own session-expiry rules; the app simply reuses
+    # the already-authenticated backend session instead of asking TOTP on every launch.
+    kotak_session_keepalive_sec: int = 240
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     @model_validator(mode="after")

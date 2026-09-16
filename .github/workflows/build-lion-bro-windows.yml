@@ -1,4 +1,4 @@
-﻿name: Build LION BRO Windows EXE
+name: Build LION BRO Windows EXE
 on:
   workflow_dispatch:
   push:
@@ -36,6 +36,7 @@ jobs:
       - name: Tests
         run: flutter test
       - name: Build Windows release
+        shell: pwsh
         env:
           APP_API_TOKEN: ${{ secrets.APP_API_TOKEN }}
         run: flutter build windows --release --dart-define=APP_API_TOKEN=$env:APP_API_TOKEN
@@ -53,4 +54,3 @@ jobs:
           name: LION-BRO-Windows-EXE
           path: mobile/LION_BRO_WINDOWS_RELEASE.zip
           if-no-files-found: error
-

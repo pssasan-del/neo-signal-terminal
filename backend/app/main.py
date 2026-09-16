@@ -19,8 +19,19 @@ from app.services.journal import journal
 from app.services.recovery import recovery_store
 from app.services.scanner import scanner_controller
 from app.services.explosion_detector import explosion_detector
+from app.services.telegram_alerts import telegram_alerts
 
-app = FastAPI(title="NEO Signal Terminal API", version="1.0.0")
+app = FastAPI(title="NEO Signal Terminal API", version="1.1.0")
+
+RELEASE_ID = "LION-BRO-2026-09-16-R2"
+
+@app.on_event("startup")
+async def _startup_tasks():
+    telegram_alerts.start()
+
+@app.on_event("shutdown")
+async def _shutdown_tasks():
+    await telegram_alerts.stop()
 
 @app.middleware("http")
 async def app_token_guard(request: Request, call_next):
@@ -50,7 +61,7 @@ async def health():
             "market_stream_running": bool(broker.market_task and not broker.market_task.done()),
             "order_stream_running": bool(broker.order_task and not broker.order_task.done()),
             "subscriptions": len(broker.subscriptions), "market_message_age_sec": age,
-            "market_feed_stale": age is not None and age > 10, "risk": risk_engine.snapshot(), "execution": execution_engine.snapshot(), "live_order_submission_enabled": settings.live_order_submission_enabled, "live_orders_unlocked": settings.live_orders_unlocked, "app_token_protected": bool(settings.app_api_token), "server_time": time.time()}
+            "market_feed_stale": age is not None and age > 10, "risk": risk_engine.snapshot(), "execution": execution_engine.snapshot(), "live_order_submission_enabled": settings.live_order_submission_enabled, "live_orders_unlocked": settings.live_orders_unlocked, "app_token_protected": bool(settings.app_api_token), "release_id": RELEASE_ID, "telegram": telegram_alerts.status(), "session_age_sec": broker.session_age_sec(), "server_time": time.time()}
 
 
 @app.get("/ready")
@@ -75,7 +86,7 @@ async def app_bootstrap():
             "ok": True, "authenticated": broker.authenticated,
             "market_stream_running": bool(broker.market_task and not broker.market_task.done()),
             "order_stream_running": bool(broker.order_task and not broker.order_task.done()),
-            "market_message_age_sec": age, "market_feed_stale": age is not None and age > 10,
+            "market_message_age_sec": age, "market_feed_stale": age is not None and age > 10, "release_id": RELEASE_ID,
         },
         "risk": risk_engine.snapshot(),
         "execution": {**execution_engine.snapshot(), "live_orders_unlocked": settings.live_orders_unlocked},
@@ -87,6 +98,8 @@ async def app_bootstrap():
         "indices": instruments.index_snapshot(),
         "scanner": scanner_controller.status(),
         "explosion": explosion_detector.status(),
+        "telegram": telegram_alerts.status(),
+        "release_id": RELEASE_ID,
         "journal": journal.list(20),
         "recovery": {"instrument_registry": instruments.registry_snapshot(), "execution_rearmed": False},
         "server_time": time.time(),
@@ -148,7 +161,7 @@ async def lifecycle_resolve_trade(signal_id: str):
 
 @app.get("/auth/status")
 async def auth_status():
-    return {"authenticated": broker.authenticated, "market_stream_running": bool(broker.market_task and not broker.market_task.done()), "order_stream_running": bool(broker.order_task and not broker.order_task.done())}
+    return {"authenticated": broker.authenticated, "otp_required": not broker.authenticated, "session_age_sec": broker.session_age_sec(), "market_stream_running": bool(broker.market_task and not broker.market_task.done()), "order_stream_running": bool(broker.order_task and not broker.order_task.done()), "release_id": RELEASE_ID}
 
 @app.post("/auth/logout")
 async def logout():
@@ -177,6 +190,47 @@ async def quote(exchange_segment: str, instrument_token: str, quote_type: str = 
 
 @app.get("/market/latest")
 async def latest(): return broker.latest_ticks
+
+@app.post("/market/resolve-quote")
+async def resolve_market_quote(body: InstrumentSearchRequest):
+    """Resolve a user-entered broker symbol to a real contract and live quote."""
+    if not broker.authenticated:
+        raise HTTPException(401, "Login required")
+    from app.services.options import flatten_records
+    sr = await instruments.search(body.exchange_segment, body.symbol, body.expiry, body.option_type, body.strike_price, body.ignore_50multiple)
+    rows = flatten_records(sr.get("data", sr) if isinstance(sr, dict) else sr)
+    if not rows:
+        return {"status": "REJECTED", "reason": "SYMBOL_NOT_FOUND"}
+    target = body.symbol.upper().replace(" ", "").replace("-EQ", "")
+    def pick(m, *names):
+        for n in names:
+            if isinstance(m, dict) and m.get(n) not in (None, ""):
+                return m.get(n)
+        return None
+    chosen = None
+    for row in rows:
+        sym = str(pick(row, "trading_symbol", "tradingSymbol", "trdSym", "displaySymbol", "symbol", "pTrdSymbol") or "")
+        norm = sym.upper().replace(" ", "").replace("-EQ", "")
+        if norm == target or norm.startswith(target):
+            chosen = row; break
+    chosen = chosen or rows[0]
+    token = pick(chosen, "instrument_token", "instrumentToken", "token", "pSymbol", "p_symbol", "exchangeIdentifier")
+    segment = str(pick(chosen, "exchange_segment", "exchangeSegment", "segment", "pExchSeg") or body.exchange_segment)
+    trading_symbol = str(pick(chosen, "trading_symbol", "tradingSymbol", "trdSym", "displaySymbol", "symbol", "pTrdSymbol") or body.symbol)
+    if not token:
+        return {"status": "REJECTED", "reason": "TOKEN_NOT_FOUND", "trading_symbol": trading_symbol}
+    q = await broker.quote(segment, str(token), "all")
+    qr = flatten_records(q)
+    merged = dict(chosen)
+    if qr:
+        merged.update(qr[0])
+    ltp = pick(merged, "last_traded_price", "ltp", "lastPrice", "last_price", "lp", "lastTradedPrice", "pLTP", "close_price")
+    try:
+        ltp = float(ltp) if ltp not in (None, "") else None
+    except Exception:
+        ltp = None
+    return {"status": "READY" if ltp and ltp > 0 else "REJECTED", "reason": None if ltp and ltp > 0 else "LIVE_PRICE_UNAVAILABLE", "trading_symbol": trading_symbol, "exchange_segment": segment, "instrument_token": str(token), "ltp": ltp}
+
 
 @app.get("/market/candles")
 async def get_candles(symbol_key: str, timeframe_sec: int = 300, limit: int = 100):
@@ -257,6 +311,16 @@ async def explosion_toggle(body: TradingToggle):
 @app.get("/explosion/history")
 async def explosion_history(limit: int = 100, symbol_key: str | None = None):
     return {"enabled": explosion_detector.enabled, "items": explosion_detector.history(limit=limit, symbol_key=symbol_key)}
+
+
+@app.get("/telegram/status")
+async def telegram_status():
+    return telegram_alerts.status()
+
+@app.post("/telegram/test")
+async def telegram_test():
+    ok = await telegram_alerts.send("🦁 LION BRO Telegram connected.")
+    return {"ok": ok, **telegram_alerts.status()}
 
 
 @app.get("/scanner/groups")

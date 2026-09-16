@@ -11,6 +11,7 @@ from app.services.positions import position_manager
 from app.services.journal import journal
 from app.services.signal_engine import signal_engine
 from app.services.explosion_detector import explosion_detector
+from app.services.telegram_alerts import telegram_alerts
 
 class BrokerService:
     def __init__(self) -> None:
@@ -19,6 +20,8 @@ class BrokerService:
         self.market_ws = None
         self.market_task: asyncio.Task | None = None
         self.order_task: asyncio.Task | None = None
+        self.keepalive_task: asyncio.Task | None = None
+        self.session_started_at: float | None = None
         self.latest_ticks: dict[str, dict[str, Any]] = {}
         self.subscriptions: dict[str, tuple[str, str, str]] = {}
         self.listeners: set[asyncio.Queue] = set()
@@ -48,16 +51,21 @@ class BrokerService:
         validate = await asyncio.to_thread(client.totp_validate, settings.kotak_mpin)
         if "error" in validate or "Error" in validate:
             return {"ok": False, "step": "totp_validate", "response": validate}
+        import time
         self.authenticated = True
+        self.session_started_at = time.time()
+        if self.keepalive_task is None or self.keepalive_task.done():
+            self.keepalive_task = asyncio.create_task(self._session_keepalive_loop(), name="kotak-session-keepalive")
         journal.add("auth", "login", {"ok": True})
-        return {"ok": True, "step": "authenticated"}
+        return {"ok": True, "step": "authenticated", "session_started_at": self.session_started_at}
 
 
     async def logout(self):
         self.authenticated = False
-        for task in (self.market_task, self.order_task):
+        for task in (self.market_task, self.order_task, self.keepalive_task):
             if task and not task.done(): task.cancel()
-        self.market_task = None; self.order_task = None; self.market_ws = None
+        self.market_task = None; self.order_task = None; self.keepalive_task = None; self.market_ws = None
+        self.session_started_at = None
         try:
             if self.client is not None and hasattr(self.client, "logout"):
                 result = await asyncio.to_thread(self.client.logout)
@@ -67,6 +75,36 @@ class BrokerService:
             result = {"ok": False, "error": str(exc)}
         journal.add("auth", "logout", result)
         return {"ok": True, "broker": result}
+
+    def session_age_sec(self) -> float | None:
+        if not self.authenticated or self.session_started_at is None:
+            return None
+        import time
+        return max(0.0, time.time() - self.session_started_at)
+
+    async def _session_keepalive_loop(self) -> None:
+        """Keep an already authenticated Kotak backend session active.
+
+        This intentionally does not manufacture/refresh credentials. If Kotak expires the
+        session, KOTAK_SESSION_EXPIRED is raised and the next app login legitimately asks TOTP.
+        """
+        delay = max(60, int(getattr(settings, "kotak_session_keepalive_sec", 240) or 240))
+        while self.authenticated:
+            try:
+                await asyncio.sleep(delay)
+                if not self.authenticated:
+                    break
+                self._guard_session_response(await asyncio.to_thread(self._ensure_client().limits))
+            except asyncio.CancelledError:
+                raise
+            except RuntimeError as exc:
+                if str(exc) == "KOTAK_SESSION_EXPIRED":
+                    self.authenticated = False
+                    journal.add("auth", "session_expired", {"age_sec": self.session_age_sec()})
+                    break
+            except Exception as exc:
+                # Transient broker/network errors must not force an OTP loop.
+                journal.add("auth", "keepalive_warning", {"error": str(exc)})
 
     async def start_streams(self) -> None:
         if not self.authenticated or self.client is None:
@@ -174,6 +212,7 @@ class BrokerService:
                                                 "symbol_key": key,
                                                 "data": final,
                                             })
+                                            await telegram_alerts.notify_explosion(final)
                                         except Exception as exc:
                                             await self._broadcast({
                                                 "channel": "explosion",
@@ -299,12 +338,14 @@ class BrokerService:
                                                     "event": "new",
                                                     "data": tracked,
                                                 })
+                                                await telegram_alerts.notify_signal(tracked)
                                 for tracked in list(signal_lifecycle.items.values()):
                                     if tracked.symbol_key == key:
                                         before = tracked.state.value
                                         updated = signal_lifecycle.update_price(tracked.id, price)
                                         if updated["state"] != before:
                                             await self._broadcast({"channel": "signal_lifecycle", "event": "state_changed", "data": updated})
+                                            await telegram_alerts.notify_lifecycle(updated)
 
                                         # A transient broker-search/quote failure must not leave an index
                                         # signal stuck in OPTION WAIT for its entire life. Retry unresolved
